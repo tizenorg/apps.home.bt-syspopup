@@ -731,20 +731,20 @@ static void __bluetooth_draw_input_view(struct bt_popup_appdata *ad,
 				__bluetooth_check_chagned_cb, entry);
 	evas_object_show(check);
 
+	r_button = elm_button_add(ad->win_main);
+	elm_object_style_set(r_button, "popup_button/default");
+	elm_object_text_set(r_button, BT_STR_CANCEL);
+	elm_object_part_content_set(passpopup, "button1", r_button);
+	evas_object_smart_callback_add(r_button, "clicked", func, ad);
+
 	l_button = elm_button_add(ad->win_main);
 	elm_object_style_set(l_button, "popup_button/default");
 	elm_object_text_set(l_button, BT_STR_OK);
-	elm_object_part_content_set(passpopup, "button1", l_button);
+	elm_object_part_content_set(passpopup, "button2", l_button);
 	evas_object_smart_callback_add(l_button, "clicked", func, ad);
 	elm_object_disabled_set(l_button, EINA_TRUE);
 
 	ad->edit_field_save_btn = l_button;
-
-	r_button = elm_button_add(ad->win_main);
-	elm_object_style_set(r_button, "popup_button/default");
-	elm_object_text_set(r_button, BT_STR_CANCEL);
-	elm_object_part_content_set(passpopup, "button2", r_button);
-	evas_object_smart_callback_add(r_button, "clicked", func, ad);
 
 	elm_object_part_content_set(layout, "elm.swallow.content", label);
 	elm_object_part_content_set(layout, "elm.swallow.entry", editfield);
@@ -833,7 +833,7 @@ static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
 				free(conv_str);
 
 			__bluetooth_draw_popup(ad, view_title,
-					BT_STR_OK, BT_STR_CANCEL,
+					BT_STR_CANCEL, BT_STR_OK,
 					__bluetooth_passkey_confirm_cb);
 		} else {
 			timeout = BT_ERROR_TIMEOUT;
@@ -904,7 +904,7 @@ static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
 		if (conv_str)
 			free(conv_str);
 
-		__bluetooth_draw_popup(ad, view_title, BT_STR_YES, BT_STR_NO,
+		__bluetooth_draw_popup(ad, view_title, BT_STR_NO, BT_STR_YES,
 				     __bluetooth_authorization_request_cb);
 	} else if (!strcasecmp(event_type, "app-confirm-request")) {
 		BT_DBG("app-confirm-request");
@@ -920,7 +920,7 @@ static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
 			return -1;
 
 		if (strcasecmp(type, "twobtn") == 0) {
-			__bluetooth_draw_popup(ad, title, BT_STR_YES, BT_STR_NO,
+			__bluetooth_draw_popup(ad, title, BT_STR_NO, BT_STR_YES,
 					     __bluetooth_app_confirm_cb);
 		} else if (strcasecmp(type, "onebtn") == 0) {
 			timeout = BT_NOTIFICATION_TIMEOUT;
@@ -946,7 +946,7 @@ static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
 		if (conv_str)
 			free(conv_str);
 
-		__bluetooth_draw_popup(ad, view_title, BT_STR_YES, BT_STR_NO,
+		__bluetooth_draw_popup(ad, view_title, BT_STR_NO, BT_STR_YES,
 				__bluetooth_push_authorization_request_cb);
 	} else if (!strcasecmp(event_type, "confirm-overwrite-request")) {
 		timeout = BT_AUTHORIZATION_TIMEOUT;
@@ -956,7 +956,7 @@ static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
 		snprintf(view_title, BT_TITLE_STR_MAX_LEN,
 			 BT_STR_OVERWRITE_FILE_Q, file);
 
-		__bluetooth_draw_popup(ad, view_title, BT_STR_YES, BT_STR_NO,
+		__bluetooth_draw_popup(ad, view_title, BT_STR_NO, BT_STR_YES,
 				__bluetooth_app_confirm_cb);
 	} else if (!strcasecmp(event_type, "keyboard-passkey-request")) {
 		device_name = bundle_get_val(kb, "device-name");
@@ -1021,7 +1021,7 @@ static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
 		if (conv_str)
 			free(conv_str);
 
-		__bluetooth_draw_popup(ad, view_title, BT_STR_YES, BT_STR_NO,
+		__bluetooth_draw_popup(ad, view_title, BT_STR_NO, BT_STR_YES,
 				     __bluetooth_authorization_request_cb);
 	} else if (!strcasecmp(event_type, "phonebook-request")) {
 		timeout = BT_AUTHORIZATION_TIMEOUT;
@@ -1042,7 +1042,7 @@ static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
 		if (conv_str)
 			free(conv_str);
 
-		__bluetooth_draw_popup(ad, view_title, BT_STR_YES, BT_STR_NO,
+		__bluetooth_draw_popup(ad, view_title, BT_STR_NO, BT_STR_YES,
 				     __bluetooth_authorization_request_cb);
 	} else if (!strcasecmp(event_type, "message-request")) {
 		timeout = BT_AUTHORIZATION_TIMEOUT;
@@ -1063,7 +1063,7 @@ static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
 		if (conv_str)
 			free(conv_str);
 
-		__bluetooth_draw_popup(ad, view_title, BT_STR_YES, BT_STR_NO,
+		__bluetooth_draw_popup(ad, view_title, BT_STR_NO, BT_STR_YES,
 				     __bluetooth_authorization_request_cb);
 	} else {
 		return -1;
