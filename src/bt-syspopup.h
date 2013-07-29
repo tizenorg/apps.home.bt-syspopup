@@ -46,7 +46,7 @@
 #define _EDJ(obj) elm_layout_edje_get(obj)
 
 #define BT_AUTHENTICATION_TIMEOUT		35
-#define BT_AUTHORIZATION_TIMEOUT		15
+#define BT_AUTHORIZATION_TIMEOUT		25
 #define BT_NOTIFICATION_TIMEOUT		2
 #define BT_ERROR_TIMEOUT			1
 
@@ -94,7 +94,7 @@
 	dgettext(BT_COMMON_PKG, "IDS_BT_BODY_ENTER_P1SS_ON_P2SS_TO_PAIR_THEN_TAP_RETURN_OR_ENTER")
 
 #define BT_STR_EXCHANGE_OBJECT_WITH_PS_Q \
-	dgettext(BT_COMMON_PKG, "IDS_BT_POP_EXCHANGEOBJECT")
+       dgettext(BT_COMMON_PKG, "IDS_BT_POP_EXCHANGEOBJECT")
 
 /* Need to convert the design ID */
 #define BT_STR_BLUETOOTH_PAIRING_REQUEST \
@@ -114,6 +114,18 @@
 
 #define BT_STR_ALLOW_PS_TO_ACCESS_MESSAGES_Q \
 	dgettext(BT_COMMON_PKG, "IDS_BT_POP_ALLOW_PS_TO_ACCESS_MESSAGES_Q")
+
+#define BT_STR_DONT_ASK_AGAIN \
+	dgettext(BT_COMMON_PKG, "IDS_BT_BODY_DONT_ASK_AGAIN")
+
+#define BT_STR_PIN_ERROR_TRY_AGAIN_Q \
+	dgettext(BT_COMMON_PKG, "IDS_BT_POP_INCORRECT_PIN_TRY_AGAIN_Q")
+
+#define BT_STR_TIMEOUT_TRY_AGAIN_Q \
+	dgettext(BT_COMMON_PKG, "IDS_BT_POP_BLUETOOTH_TIMEOUT_TRY_AGAIN_Q")
+
+#define BT_STR_BLUETOOTH_ERROR_TRY_AGAIN_Q \
+	dgettext(BT_COMMON_PKG, "IDS_BT_POP_BLUETOOTH_ERROR_TRY_AGAIN_Q")
 
 #define BT_STR_OK dgettext("sys_string", "IDS_COM_SK_OK")
 #define BT_STR_YES dgettext("sys_string", "IDS_COM_SK_YES")
@@ -149,6 +161,7 @@ typedef enum {
 	BT_AGENT_REJECT,
 	BT_AGENT_CANCEL,
 	BT_CORE_AGENT_TIMEOUT,
+	BT_AGENT_ACCEPT_ALWAYS,
 } bt_agent_accept_type_t;
 
 struct bt_popup_appdata {
@@ -171,6 +184,7 @@ struct bt_popup_appdata {
 	DBusGConnection *conn;
 
 	int changed_mode;
+	gboolean make_trusted;
 	bt_popup_event_type_t event_type;
 };
 

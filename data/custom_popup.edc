@@ -1,269 +1,282 @@
-#define SIDE_MARGIN 32 0
-
 collections {
 	group {
-		name: "custom_popup";
-		  parts{
+		name: "passwd_popup";
+		images {
+			image: "00_search_edit_field_bg.png" COMP;
+		}
+		parts {
 			part {
-				name: "left_padding";
-				type: RECT;
+				name: "pad_t";
+				type: SPACER;
 				scale: 1;
 				description {
 					state: "default" 0.0;
+					align: 0.5 0.0;
+					min: 0 0;
+					fixed: 0 1;
+					rel1 {
+						relative: 1.0 0.0;to_x: "pad_l";
+					}
+					rel2 {
+						relative: 0.0 0.0;to_x: "pad_r";
+					}
+				}
+			}
+			part {
+				name: "pad_l";
+				type: SPACER;
+				scale: 1;
+				description {
+					state: "default" 0.0;
+					min: 0 0;
+					max: 0 0;
 					fixed: 1 0;
-					visible: 0;
-					align: 0.0 0.5;
-					min: SIDE_MARGIN;
 					rel1 {
 						relative: 0.0 0.0;
 					}
 					rel2 {
 						relative: 0.0 1.0;
 					}
-				}
-			}
-			part{
-				name:"content";
-				type: SWALLOW;
-				scale : 1;
-				description {
-					state: "default" 0.0;
-					min: 3 0;
-					align: 0.5 0.5;
-					fixed: 1 0;
-					rel1 {
-						relative: 1.0 0.0;
-						to:"left_padding";
-					}
-					rel2 {
-						relative: 0.0 1.0;
-						to:"right_padding";
-					}
+					align: 0.0 0.0;
 				}
 			}
 			part {
-				name: "right_padding";
-				type: RECT;
+				name: "pad_r";
+				type: SPACER;
 				scale: 1;
 				description {
 					state: "default" 0.0;
+					min: 0 0;
+					max: 0 0;
 					fixed: 1 0;
-					visible: 0;
-					align: 1.0 0.5;
-					min: SIDE_MARGIN;
 					rel1 {
 						relative: 1.0 0.0;
 					}
 					rel2 {
 						relative: 1.0 1.0;
 					}
+					align: 1.0 0.0;
+				}
+			}
+
+			part { name: "label";
+				type: SWALLOW;
+				scale: 1;
+				description {
+					state: "default" 0.0;
+					rel1 {
+						relative: 1.0 1.0;
+						to_x: "pad_l";
+						to_y: "pad_t";
+					}
+					rel2 {
+						relative: 0.0 0.0;
+						to_x: "pad_r";
+						to_y: "label_space";
+					}
+				}
+			}
+
+			part { name: "label_space";
+				type: SWALLOW;
+				scale: 1;
+				description {
+					state: "default" 0.0;
+					rel1 {
+						relative: 1.0 1.0;
+						to_x: "pad_l";
+						to_y: "label";
+					}
+					rel2 {
+						relative: 0.0 0.0;
+						to_x: "pad_r";
+						to_y: "entry";
+					}
+				}
+			}
+
+			part {
+				name: "entry";
+				type: SWALLOW;
+				scale: 1;
+				description {
+					state: "default" 0.0;
+					rel1 {
+						relative: 1.0 1.0;
+						to_x: "pad_l";
+						to_y: "label";
+					}
+					rel2 {
+						relative: 0.0 0.0;
+						to_x: "pad_r";
+						to_y: "pad_b";
+					}
+				}
+			}
+			part {
+				name: "pad_b";
+				type: SPACER;
+				scale: 1;
+				description {
+					state: "default" 0.0;
+					align: 0.0 1.0;
+					fixed: 1 1;
+					rel1 {
+						relative: 0.0 1.0;
+					}
+					rel2 {
+						relative: 0.0 1.0;
+					}
 				}
 			}
 		}
 	}
 
-
-
-	group { name: "popup_checkview";
-	   parts {
-	      part { name: "pad_t";
-	         scale : 1;
-	         mouse_events: 0;
-	         repeat_events: 1;
-	         description { state: "default" 0.0;
-	            align: 0.5 0.0;
-	            min: 0 0;
-	            fixed: 0 1;
-	            rel1 {
-	               relative: 1.0 0.0;to_x: "pad_l";
-	            }
-	            rel2 {
-	               relative: 0.0 0.0;to_x: "pad_r";
-	            }
-	         }
-	      }
-	      part { name: "pad_l";
-	         scale: 1;
-	         description { state: "default" 0.0;
-	            min : 0 0;
-	            fixed: 1 0;
-	            rel1 {
-	               relative: 0.0 0.0;
-	            }
-	            rel2 {
-	               relative: 0.0 1.0;
-	            }
-	            align: 0.0 0.0;
-	         }
-	      }
-	      part { name: "pad_r";
-	         scale: 1;
-	         description { state: "default" 0.0;
-	            min : 0 0;
-	            fixed: 1 0;
-	            rel1 {
-	               relative: 1.0 0.0;
-	            }
-	            rel2 {
-	               relative: 1.0 1.0;
-	            }
-	            align: 1.0 0.0;
-	         }
-	      }
-	      part { name:"elm.swallow.content";
-	         type: SWALLOW;
-	         ignore_flags: ON_HOLD;
-	         scale : 1;
-	         description { state: "default" 0.0;
-	            min: 648 0;
-	            align: 0.5 0.5;
-	            fixed: 1 0;
-	            rel1 {
-	               relative: 0.5 1.0;
-	               to: "pad_t";
-	            }
-	            rel2 {
-	               relative: 0.5 0.0;
-	               to: "pad_b";
-	            }
-	         }
-	      }
-	      part { name: "pad_b";
-	         scale : 1;
-	         mouse_events: 0;
-	         description { state: "default" 0.0;
-	            align: 0.5 1.0;
-	            min: 0 84;
-	            fixed: 0 1;
-	            rel1 {
-	               relative: 1.0 1.0;to_x: "pad_l";
-	            }
-	            rel2 {
-	               relative: 0.0 1.0;to_x: "pad_r";
-	            }
-	         }
-	      }
-	      part { name: "elm.swallow.end";
-	         type: SWALLOW;
-	         ignore_flags: ON_HOLD;
-	         scale : 1;
-	         mouse_events: 1;
-	         repeat_events: 1;
-	         description { state: "default" 0.0;
-	            align: 0.0 1.0;
-	            min: 648 64;
-	            max: 648 64;
-	            fixed: 1 1;
-	            rel1 {
-	               relative: 0.0 0.0;
-	               to: "pad_b";
-	            }
-	            rel2 {
-	               relative: 1.0 1.0;
-	               to: "pad_b";
-	            }
-	         }
-	      }
-	      part { name: "pad_after_check";
-	         type : RECT;
-	         scale : 1;
-	         mouse_events: 0;
-	         description { state: "default" 0.0;
-	            align: 0.0 0.0;
-	            min: 16 64;
-	            fixed: 1 1;
-	            visible: 0;
-	            rel1 {
-	               relative: 1.0 0.0;to: "elm.swallow.end";
-	            }
-	            rel2 {
-	               relative: 1.0 1.0;to: "elm.swallow.end";
-	            }
-	         }
-	      }
-	      part { name: "elm.text";
-	         type: TEXT;
-	         scale : 1;
-	         description { state: "default" 0.0;
-	            text {
-	               font: "SLP:style=Medium";
-	               size: 42;
-	               min: 0 0;
-	               align: 0.0 0.5;
-	               text_class: "slp";
-	            }
-	            color: 0 0 0 255;
-	            align: 0.0 0.5;
-	            rel1 {
-	               relative: 1.0 0.0;
-	               to_x: "pad_after_check";
-	               to_y: "elm.swallow.end";
-	            }
-	            rel2 {
-	               relative: 1.0 1.0;
-	               to_y: "elm.swallow.end";
-	            }
-	         }
-	      }
-	   }
-	}
-
-	group { name: "popup_checkview_image";
-	   inherit: "popup_checkview";
-	   parts{
-	      part{ name:"elm.swallow.content";
-	         type: SWALLOW;
-	         ignore_flags: ON_HOLD;
-	         scale : 1;
-	         description { state: "default" 0.0;
-	            min: 648 0;
-	            align: 0.5 0.5;
-	            fixed: 1 0;
-	            rel1 {
-	               relative: 0.5 1.0;
-	               to: "pad_t";
-	            }
-	            rel2 {
-	               relative: 0.5 0.0;
-	               to: "elm.swallow.icon.bg";
-	            }
-	         }
-	      }
-	      part { name: "elm.swallow.icon.bg";
-	         scale: 1;
-	         description { state: "default" 0.0;
-	            align: 0.5 1.0;
-	            fixed: 1 1;
-	            visible: 0;
-	            min: 360 164;
-	            rel1 {
-	               relative: 0.5 0.0;
-	               to: "pad_b";
-	            }
-	            rel2 {
-	               relative: 0.5 0.0;
-	               to: "pad_b";
-	            }
-	         }
-	      }
-	      part { name: "elm.swallow.entry";
-	         type: SWALLOW;
-	         scale: 1;
-	         ignore_flags: ON_HOLD;
-	         description { state: "default" 0.0;
-	            align: 0.5 0.5;
-	            fixed: 0 1;
-	            min: 648 120;
-	            rel1 {
-	               relative: 0.0 0.5;
-	               to: "elm.swallow.icon.bg";
-	            }
-	            rel2 {
-	               relative: 1.0 0.5;
-	               to: "elm.swallow.icon.bg";
-	            }
-	         }
-	      }
-	   }
+	group {
+		name: "auth_popup";
+		parts {
+			part {
+				name: "pad_t";
+				type: SPACER;
+				scale: 1;
+				description {
+					state: "default" 0.0;
+					align: 0.5 0.0;
+					min: 0 0;
+					fixed: 0 1;
+					rel1 {
+						relative: 1.0 0.0;to_x: "pad_l";
+					}
+					rel2 {
+						relative: 0.0 0.0;to_x: "pad_r";
+					}
+				}
+			}
+			part {
+				name: "pad_l";
+				type: SPACER;
+				scale: 1;
+				description {
+					state: "default" 0.0;
+					min: 0 0;
+					max: 0 0;
+					fixed: 1 0;
+					rel1 {
+						relative: 0.0 0.0;
+					}
+					rel2 {
+						relative: 0.0 1.0;
+					}
+					align: 0.0 0.0;
+				}
+			}
+			part {
+				name: "pad_r";
+				type: SPACER;
+				scale: 1;
+				description {
+					state: "default" 0.0;
+					min: 0 0;
+					max: 0 0;
+					fixed: 1 0;
+					rel1 {
+						relative: 1.0 0.0;
+					}
+					rel2 {
+						relative: 1.0 1.0;
+					}
+					align: 1.0 0.0;
+				}
+			}
+			part {
+				name: "popup_title";
+				type: SWALLOW;
+				scale: 1;
+				description {
+					state: "default" 0.0;
+					rel1 {
+						relative: 1.0 1.0;
+						to_x: "pad_l";
+						to_y: "pad_t";
+					}
+					rel2 {
+						relative: 0.0 0.0;
+						to_x: "pad_r";
+						to_y: "pad_b";
+					}
+				}
+			}
+			part {
+				name: "pad_b";
+				type: SPACER;
+				scale: 1;
+				description {
+					state: "default" 0.0;
+					align: 0.5 1.0;
+					min: 400 84;
+					fixed: 1 1;
+					rel1 {
+						relative: 0.5 1.0;
+					}
+					rel2 {
+						relative: 0.5 1.0;
+					}
+				}
+			}
+			part {
+				name: "check";
+				type: SWALLOW;
+				scale: 1;
+				mouse_events: 1;
+				repeat_events: 1;
+				description {
+					state: "default" 0.0;
+					align: 0.0 1.0;
+					min: 63 63;
+					max: 63 63;
+					fixed: 1 1;
+					rel1.to: "pad_b";
+					rel2 {
+						relative: 0.0 1.0;
+						to: "pad_b";
+					}
+				}
+			}
+			part {
+				name: "pad_after_check";
+				type: SPACER;
+				scale: 1;
+				description {
+					state: "default" 0.0;
+					align: 0.0 0.0;
+					min: 16 63;
+					fixed: 1 1;
+					rel1 {
+						relative: 1.0 0.0;to: "check";
+					}
+					rel2 {
+						relative: 1.0 1.0;to: "check";
+					}
+				}
+			}
+			part {
+				name: "check_label";
+				type: SWALLOW;
+				scale: 1;
+				description {
+					state: "default" 0.0;
+					rel1 {
+						relative: 1.0 0.0;
+						to_x: "pad_after_check";
+						to_y: "check";
+					}
+					rel2 {
+						relative: 1.0 1.0;
+						to_x: "pad_b";
+						to_y: "check";
+					}
+				}
+			}
+		}
 	}
 }

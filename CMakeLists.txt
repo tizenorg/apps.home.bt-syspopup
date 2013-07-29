@@ -33,7 +33,8 @@ pkg_check_modules(pkgs REQUIRED
 	utilX
 	bluetooth-api
 	feedback
-	aul)
+	aul
+	efl-assist)
 
 FOREACH(flag ${pkgs_CFLAGS})
 	SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} ${flag} -Wall -g")

@@ -9,10 +9,12 @@ Release:    1
 Group:      main
 License:    Flora Software License
 Source0:    %{name}-%{version}.tar.gz
+Requires(post): sys-assert
 BuildRequires:  pkgconfig(evas)
 BuildRequires:  pkgconfig(ecore-input)
 BuildRequires:  pkgconfig(ethumb)
 BuildRequires:  pkgconfig(elementary)
+BuildRequires:  efl-assist-devel
 BuildRequires:  pkgconfig(efreet)
 BuildRequires:  pkgconfig(sysman)
 BuildRequires:  pkgconfig(sensor)
