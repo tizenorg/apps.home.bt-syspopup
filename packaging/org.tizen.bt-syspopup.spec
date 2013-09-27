@@ -53,7 +53,8 @@ make %{?jobs:-j%jobs}
 %install
 rm -rf %{buildroot}
 %make_install
-
+mkdir -p %{buildroot}/usr/share/license
+cp LICENSE.Flora %{buildroot}/usr/share/license/%{name}
 
 %files
 %manifest org.tizen.bt-syspopup.manifest
@@ -63,3 +64,4 @@ rm -rf %{buildroot}
 %{_appdir}/org.tizen.bt-syspopup/bin/bt-syspopup
 %{_appdir}/org.tizen.bt-syspopup/res/edje/*.edj
 %{_optdir}/share/icons/default/small/org.tizen.bt-syspopup.png
+/usr/share/license/%{name}
