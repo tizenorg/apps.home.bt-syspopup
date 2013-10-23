@@ -26,7 +26,6 @@
 #include <aul.h>
 #include <bluetooth-api.h>
 #include <feedback.h>
-#include <efl_assist.h>
 
 #include "bt-syspopup.h"
 
@@ -140,6 +139,8 @@ static void __bluetooth_parse_event(struct bt_popup_appdata *ad, const char *eve
 		ad->event_type = BT_EVENT_PHONEBOOK_REQUEST;
 	else if (!strcasecmp(event_type, "message-request"))
 		ad->event_type = BT_EVENT_MESSAGE_REQUEST;
+	else if (!strcasecmp(event_type, "pairing-retry-request"))
+		ad->event_type = BT_EVENT_RETRY_PAIR_REQUEST;
 	else
 		ad->event_type = 0x0000;
 		return;
@@ -152,6 +153,7 @@ static void __bluetooth_request_to_cancel(void)
 
 static void __bluetooth_remove_all_event(struct bt_popup_appdata *ad)
 {
+	BT_DBG("Remove event 0X%X", ad->event_type);
 	switch (ad->event_type) {
 	case BT_EVENT_PIN_REQUEST:
 
@@ -230,27 +232,90 @@ static void __bluetooth_remove_all_event(struct bt_popup_appdata *ad)
 	case BT_EVENT_PUSH_AUTHORIZE_REQUEST:
 	case BT_EVENT_EXCHANGE_REQUEST:
 
-		dbus_g_proxy_call_no_reply(ad->obex_proxy,
+		dbus_g_proxy_call_no_reply(ad->agent_proxy,
 					   "ReplyAuthorize",
 					   G_TYPE_UINT, BT_AGENT_CANCEL,
 					   G_TYPE_INVALID, G_TYPE_INVALID);
 
 		break;
 
-	case BT_EVENT_CONFIRM_OVERWRITE_REQUEST:
+	case BT_EVENT_CONFIRM_OVERWRITE_REQUEST: {
+		DBusMessage *msg;
+		int response = BT_AGENT_REJECT;
 
-		dbus_g_proxy_call_no_reply(ad->obex_proxy,
-					   "ReplyOverwrite",
-					   G_TYPE_UINT, BT_AGENT_CANCEL,
-					   G_TYPE_INVALID, G_TYPE_INVALID);
+		msg = dbus_message_new_signal(BT_SYS_POPUP_IPC_RESPONSE_OBJECT,
+						BT_SYS_POPUP_INTERFACE,
+						BT_SYS_POPUP_METHOD_RESPONSE);
+		if (msg == NULL) {
+			BT_ERR("msg == NULL, Allocation failed");
+			break;
+		}
 
+		dbus_message_append_args(msg, DBUS_TYPE_INT32,
+						&response, DBUS_TYPE_INVALID);
+
+		e_dbus_message_send(ad->EDBusHandle, msg, NULL, -1, NULL);
+		dbus_message_unref(msg);
 		break;
+	}
+
+	case BT_EVENT_RETRY_PAIR_REQUEST: {
+		DBusMessage *msg = NULL;
+		int response = BT_AGENT_REJECT;
+
+		msg = dbus_message_new_signal(BT_SYS_POPUP_IPC_RESPONSE_OBJECT,
+			      BT_SYS_POPUP_INTERFACE,
+			      BT_SYS_POPUP_METHOD_RESPONSE);
+
+		dbus_message_append_args(msg,
+			 DBUS_TYPE_INT32, &response,
+			 DBUS_TYPE_INVALID);
+
+		e_dbus_message_send(ad->EDBusHandle, msg, NULL, -1, NULL);
+		dbus_message_unref(msg);
+		break;
+	}
 
 	default:
 		break;
 	}
 
 	__bluetooth_win_del(ad);
+}
+static void __bluetooth_retry_pairing_cb(void *data,
+				     Evas_Object *obj, void *event_info)
+{
+	BT_DBG("+ ");
+	if (obj == NULL || data == NULL)
+		return;
+
+	struct bt_popup_appdata *ad = (struct bt_popup_appdata *)data;
+	const char *event = elm_object_text_get(obj);
+
+	DBusMessage *msg = NULL;
+	int response;
+
+	msg = dbus_message_new_signal(BT_SYS_POPUP_IPC_RESPONSE_OBJECT,
+				      BT_SYS_POPUP_INTERFACE,
+				      BT_SYS_POPUP_METHOD_RESPONSE);
+
+	if (!g_strcmp0(event, BT_STR_OK))
+		response = BT_AGENT_ACCEPT;
+	 else
+		response = BT_AGENT_REJECT;
+
+	dbus_message_append_args(msg,
+				 DBUS_TYPE_INT32, &response,
+				 DBUS_TYPE_INVALID);
+
+	e_dbus_message_send(ad->EDBusHandle, msg, NULL, -1, NULL);
+
+	dbus_message_unref(msg);
+
+	evas_object_del(obj);
+
+	__bluetooth_win_del(ad);
+	BT_DBG("-");
 }
 
 static int __bluetooth_request_timeout_cb(void *data)
@@ -394,7 +459,7 @@ static void __bluetooth_app_confirm_cb(void *data,
 				      BT_SYS_POPUP_INTERFACE,
 				      BT_SYS_POPUP_METHOD_RESPONSE);
 
-	if (!g_strcmp0(event, BT_STR_YES) || !g_strcmp0(event, BT_STR_OK))
+	if (!g_strcmp0(event, BT_STR_OK))
 		response = BT_AGENT_ACCEPT;
 	else
 		response = BT_AGENT_REJECT;
@@ -422,7 +487,7 @@ static void __bluetooth_authorization_request_cb(void *data,
 
 	const char *event = elm_object_text_get(obj);
 
-	if (!g_strcmp0(event, BT_STR_YES)) {
+	if (!g_strcmp0(event, BT_STR_OK)) {
 		reply_val = (ad->make_trusted == TRUE) ?
 				BT_AGENT_ACCEPT_ALWAYS : BT_AGENT_ACCEPT;
 	} else {
@@ -448,7 +513,7 @@ static void __bluetooth_push_authorization_request_cb(void *data,
 
 	const char *event = elm_object_text_get(obj);
 
-	if (!g_strcmp0(event, BT_STR_YES))
+	if (!g_strcmp0(event, BT_STR_OK))
 		dbus_g_proxy_call_no_reply(ad->obex_proxy, "ReplyAuthorize",
 					   G_TYPE_UINT, BT_AGENT_ACCEPT,
 					   G_TYPE_INVALID, G_TYPE_INVALID);
@@ -593,15 +658,15 @@ static void __bluetooth_draw_auth_popup(struct bt_popup_appdata *ad,
 			Evas_Object *obj, void *event_info))
 {
 	char temp_str[BT_TITLE_STR_MAX_LEN + BT_TEXT_EXTRA_LEN] = { 0 };
-	Evas_Object *btn1;
-	Evas_Object *btn2;
-	Evas_Object *layout;
-	Evas_Object *label;
-	Evas_Object *label2;
-	Evas_Object *check;
+	Evas_Object *btn1 = NULL;
+	Evas_Object *btn2 = NULL;
+	Evas_Object *layout = NULL;
+	Evas_Object *label = NULL;
+	Evas_Object *check = NULL;
+
 	BT_DBG("+");
 
-	ad->make_trusted = FALSE;
+	ad->make_trusted = TRUE;
 
 	ad->popup = elm_popup_add(ad->win_main);
 	evas_object_size_hint_weight_set(ad->popup, EVAS_HINT_EXPAND,
@@ -619,45 +684,36 @@ static void __bluetooth_draw_auth_popup(struct bt_popup_appdata *ad,
 					"%s", title);
 
 		label = elm_label_add(ad->popup);
+		elm_object_style_set(label, "popup/default");
 		elm_label_line_wrap_set(label, ELM_WRAP_MIXED);
 		elm_object_text_set(label, temp_str);
 		evas_object_size_hint_weight_set(label, EVAS_HINT_EXPAND, 0.0);
-		evas_object_size_hint_align_set(label, EVAS_HINT_FILL,
-								EVAS_HINT_FILL);
+		evas_object_size_hint_align_set(label, EVAS_HINT_FILL, EVAS_HINT_FILL);
 		elm_object_part_content_set(layout, "popup_title", label);
 		evas_object_show(label);
 	}
 
 	check = elm_check_add(ad->popup);
-	elm_check_state_set(check, EINA_FALSE);
+	elm_check_state_set(check, EINA_TRUE);
+	elm_object_text_set(check, BT_STR_DONT_ASK_AGAIN);
 	evas_object_size_hint_align_set(check, EVAS_HINT_FILL, EVAS_HINT_FILL);
-	evas_object_size_hint_weight_set(check, EVAS_HINT_EXPAND,
-							EVAS_HINT_EXPAND);
+	evas_object_size_hint_weight_set(check, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+	evas_object_show(check);
 	evas_object_smart_callback_add(check, "changed",
 					__bluetooth_auth_check_clicked_cb, ad);
 	elm_object_part_content_set(layout, "check", check);
-	evas_object_show(check);
-
-	label2 = elm_label_add(ad->popup);
-	elm_label_line_wrap_set(label2, ELM_WRAP_MIXED);
-	elm_object_text_set(label2, BT_STR_DONT_ASK_AGAIN);
-	evas_object_size_hint_weight_set(label2, EVAS_HINT_EXPAND, 0.0);
-	evas_object_size_hint_align_set(label2, EVAS_HINT_FILL,
-							EVAS_HINT_FILL);
-	elm_object_part_content_set(layout, "check_label", label2);
-	evas_object_show(label2);
 
 	evas_object_show(layout);
 	elm_object_content_set(ad->popup, layout);
 
 	btn1 = elm_button_add(ad->popup);
-	elm_object_style_set(btn1, "popup_button/default");
+	elm_object_style_set(btn1, "popup");
 	elm_object_text_set(btn1, btn1_text);
 	elm_object_part_content_set(ad->popup, "button1", btn1);
 	evas_object_smart_callback_add(btn1, "clicked", func, ad);
 
 	btn2 = elm_button_add(ad->popup);
-	elm_object_style_set(btn2, "popup_button/default");
+	elm_object_style_set(btn2, "popup");
 	elm_object_text_set(btn2, btn2_text);
 	elm_object_part_content_set(ad->popup, "button2", btn2);
 	evas_object_smart_callback_add(btn2, "clicked", func, ad);
@@ -735,19 +791,19 @@ static void __bluetooth_draw_popup(struct bt_popup_appdata *ad,
 
 	if ((btn1_text != NULL) && (btn2_text != NULL)) {
 		btn1 = elm_button_add(ad->popup);
-		elm_object_style_set(btn1, "popup_button/default");
+		elm_object_style_set(btn1, "popup");
 		elm_object_text_set(btn1, btn1_text);
 		elm_object_part_content_set(ad->popup, "button1", btn1);
 		evas_object_smart_callback_add(btn1, "clicked", func, ad);
 
 		btn2 = elm_button_add(ad->popup);
-		elm_object_style_set(btn2, "popup_button/default");
+		elm_object_style_set(btn2, "popup");
 		elm_object_text_set(btn2, btn2_text);
 		elm_object_part_content_set(ad->popup, "button2", btn2);
 		evas_object_smart_callback_add(btn2, "clicked", func, ad);
 	} else if (btn1_text != NULL) {
 		btn1 = elm_button_add(ad->popup);
-		elm_object_style_set(btn1, "popup_button/default");
+		elm_object_style_set(btn1, "popup");
 		elm_object_text_set(btn1, btn1_text);
 		elm_object_part_content_set(ad->popup, "button1", btn1);
 		evas_object_smart_callback_add(btn1, "clicked", func, ad);
@@ -918,18 +974,23 @@ static void __bluetooth_draw_input_view(struct bt_popup_appdata *ad,
 	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 
 	label = elm_label_add(passpopup);
+	elm_object_style_set(label, "popup/default");
 	elm_label_line_wrap_set(label, ELM_WRAP_WORD);
 	elm_object_text_set(label, text);
 	evas_object_size_hint_weight_set(label, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(label, EVAS_HINT_FILL, EVAS_HINT_FILL);
 	evas_object_show(label);
 
-	entry = ea_editfield_add(passpopup, EA_EDITFIELD_SINGLELINE);
+	entry = elm_entry_add(layout);
+	elm_object_style_set(entry, "editfield/password/popup");
 	/* As per specs PIN codes may be up to 16 characters*/
 	limit_filter_data.max_char_count = 16;
 	elm_entry_markup_filter_append(entry, elm_entry_filter_limit_size,
 				     &limit_filter_data);
+	elm_entry_single_line_set(entry, EINA_TRUE);
 	elm_entry_scrollable_set(entry, EINA_TRUE);
+	elm_object_signal_emit(entry, "elm,state,focus,on", "");
+	elm_object_signal_emit(entry, "elm,action,hide,search_icon", "");
 	elm_entry_prediction_allow_set(entry, EINA_FALSE);
 	elm_entry_password_set(entry, EINA_TRUE);
 	elm_entry_input_panel_layout_set(entry, ELM_INPUT_PANEL_LAYOUT_NUMBERONLY);
@@ -941,13 +1002,13 @@ static void __bluetooth_draw_input_view(struct bt_popup_appdata *ad,
 				ad);
 
 	l_button = elm_button_add(ad->win_main);
-	elm_object_style_set(l_button, "popup_button/default");
+	elm_object_style_set(l_button, "popup");
 	elm_object_text_set(l_button, BT_STR_CANCEL);
 	elm_object_part_content_set(passpopup, "button1", l_button);
 	evas_object_smart_callback_add(l_button, "clicked", func, ad);
 
 	r_button = elm_button_add(ad->win_main);
-	elm_object_style_set(r_button, "popup_button/default");
+	elm_object_style_set(r_button, "popup");
 	elm_object_text_set(r_button, BT_STR_OK);
 	elm_object_part_content_set(passpopup, "button2", r_button);
 	evas_object_smart_callback_add(r_button, "clicked", func, ad);
@@ -977,6 +1038,8 @@ static void __bluetooth_draw_input_view(struct bt_popup_appdata *ad,
 
 	elm_object_part_content_set(layout, "entry", entry);
 	elm_object_part_content_set(layout, "label", label);
+
+	elm_object_part_text_set(entry, "elm.guide", BT_STR_TAP_TO_ENTER);
 
 	evas_object_show(layout);
 	evas_object_show(content);
@@ -1134,7 +1197,7 @@ static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
 		if (conv_str)
 			free(conv_str);
 
-		__bluetooth_draw_auth_popup(ad, view_title, BT_STR_NO, BT_STR_YES,
+		__bluetooth_draw_auth_popup(ad, view_title, BT_STR_CANCEL, BT_STR_OK,
 				     __bluetooth_authorization_request_cb);
 	} else if (!strcasecmp(event_type, "app-confirm-request")) {
 		BT_DBG("app-confirm-request");
@@ -1150,11 +1213,11 @@ static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
 			return -1;
 
 		if (strcasecmp(type, "twobtn") == 0) {
-			__bluetooth_draw_popup(ad, title, BT_STR_NO, BT_STR_YES,
+			__bluetooth_draw_popup(ad, title, BT_STR_CANCEL, BT_STR_OK,
 					     __bluetooth_app_confirm_cb);
 		} else if (strcasecmp(type, "onebtn") == 0) {
 			timeout = BT_NOTIFICATION_TIMEOUT;
-			__bluetooth_draw_popup(ad, title, BT_STR_YES, NULL,
+			__bluetooth_draw_popup(ad, title, BT_STR_OK, NULL,
 					     __bluetooth_app_confirm_cb);
 		} else if (strcasecmp(type, "none") == 0) {
 			timeout = BT_NOTIFICATION_TIMEOUT;
@@ -1176,7 +1239,7 @@ static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
 		if (conv_str)
 			free(conv_str);
 
-		__bluetooth_draw_popup(ad, view_title, BT_STR_NO, BT_STR_YES,
+		__bluetooth_draw_popup(ad, view_title, BT_STR_CANCEL, BT_STR_OK,
 				__bluetooth_push_authorization_request_cb);
 	} else if (!strcasecmp(event_type, "confirm-overwrite-request")) {
 		timeout = BT_AUTHORIZATION_TIMEOUT;
@@ -1186,7 +1249,7 @@ static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
 		snprintf(view_title, BT_TITLE_STR_MAX_LEN,
 			 BT_STR_OVERWRITE_FILE_Q, file);
 
-		__bluetooth_draw_popup(ad, view_title, BT_STR_NO, BT_STR_YES,
+		__bluetooth_draw_popup(ad, view_title, BT_STR_CANCEL, BT_STR_OK,
 				__bluetooth_app_confirm_cb);
 	} else if (!strcasecmp(event_type, "keyboard-passkey-request")) {
 		device_name = bundle_get_val(kb, "device-name");
@@ -1246,12 +1309,12 @@ static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
 			conv_str = elm_entry_utf8_to_markup(device_name);
 
 		snprintf(view_title, BT_TITLE_STR_MAX_LEN,
-			 BT_STR_EXCHANGE_OBJECT_WITH_PS_Q, conv_str);
+			 BT_STR_RECEIVE_FILE_FROM_PS_Q, conv_str);
 
 		if (conv_str)
 			free(conv_str);
 
-		__bluetooth_draw_popup(ad, view_title, BT_STR_NO, BT_STR_YES,
+		__bluetooth_draw_popup(ad, view_title, BT_STR_CANCEL, BT_STR_OK,
 				     __bluetooth_authorization_request_cb);
 	} else if (!strcasecmp(event_type, "phonebook-request")) {
 		timeout = BT_AUTHORIZATION_TIMEOUT;
@@ -1272,7 +1335,7 @@ static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
 		if (conv_str)
 			free(conv_str);
 
-		__bluetooth_draw_popup(ad, view_title, BT_STR_NO, BT_STR_YES,
+		__bluetooth_draw_auth_popup(ad, view_title, BT_STR_CANCEL, BT_STR_OK,
 				     __bluetooth_authorization_request_cb);
 	} else if (!strcasecmp(event_type, "message-request")) {
 		timeout = BT_AUTHORIZATION_TIMEOUT;
@@ -1293,8 +1356,24 @@ static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
 		if (conv_str)
 			free(conv_str);
 
-		__bluetooth_draw_auth_popup(ad, view_title, BT_STR_NO, BT_STR_YES,
+		__bluetooth_draw_auth_popup(ad, view_title, BT_STR_CANCEL, BT_STR_OK,
 				     __bluetooth_authorization_request_cb);
+	} else if (!strcasecmp(event_type, "pairing-retry-request")) {
+
+		const char *err =  bundle_get_val(kb, "error");
+		if (!strcasecmp(err, "timeout"))
+			__bluetooth_draw_popup(ad, BT_STR_TIMEOUT_TRY_AGAIN_Q,
+					BT_STR_CANCEL, BT_STR_OK,
+					__bluetooth_retry_pairing_cb);
+		else if (!strcasecmp(err, "authfailed"))
+			__bluetooth_draw_popup(ad, BT_STR_PIN_ERROR_TRY_AGAIN_Q,
+					BT_STR_CANCEL, BT_STR_OK,
+					__bluetooth_retry_pairing_cb);
+		else
+			__bluetooth_draw_popup(ad, BT_STR_BLUETOOTH_ERROR_TRY_AGAIN_Q,
+					BT_STR_CANCEL, BT_STR_OK,
+					__bluetooth_retry_pairing_cb);
+
 	} else {
 		return -1;
 	}

@@ -70,6 +70,9 @@
 #define BT_DBG(format, args...) SLOGD(format, ##args)
 #define BT_ERR(format, args...) SLOGE(format, ##args)
 
+#define BT_DBG_SECURE(fmt, args...) SECURE_SLOGD(fmt, ##args)
+#define BT_ERR_SECURE(fmt, args...) SECURE_SLOGE(fmt, ##args)
+
 #define BT_SYS_POPUP_IPC_NAME "org.projectx"
 #define BT_SYS_POPUP_IPC_RESPONSE_OBJECT "/org/projectx/bt_syspopup_res"
 #define BT_SYS_POPUP_INTERFACE "User.Bluetooth.syspopup"
@@ -93,8 +96,8 @@
 #define BT_STR_ENTER_PS_ON_PS_TO_PAIR \
 	dgettext(BT_COMMON_PKG, "IDS_BT_BODY_ENTER_P1SS_ON_P2SS_TO_PAIR_THEN_TAP_RETURN_OR_ENTER")
 
-#define BT_STR_EXCHANGE_OBJECT_WITH_PS_Q \
-       dgettext(BT_COMMON_PKG, "IDS_BT_POP_EXCHANGEOBJECT")
+#define BT_STR_RECEIVE_FILE_FROM_PS_Q \
+	dgettext(BT_COMMON_PKG, "IDS_BT_POP_RECEIVE_FILE_FROM_PS_Q")
 
 /* Need to convert the design ID */
 #define BT_STR_BLUETOOTH_PAIRING_REQUEST \
@@ -126,12 +129,15 @@
 
 #define BT_STR_BLUETOOTH_ERROR_TRY_AGAIN_Q \
 	dgettext(BT_COMMON_PKG, "IDS_BT_POP_BLUETOOTH_ERROR_TRY_AGAIN_Q")
+#define BT_STR_TAP_TO_ENTER \
+	dgettext(BT_COMMON_PKG, "IDS_SIM_BODY_TAP_TO_ENTER_ABB")
 
 #define BT_STR_OK dgettext("sys_string", "IDS_COM_SK_OK")
 #define BT_STR_YES dgettext("sys_string", "IDS_COM_SK_YES")
 #define BT_STR_NO dgettext("sys_string", "IDS_COM_SK_NO")
 #define BT_STR_DONE dgettext("sys_string", "IDS_COM_SK_DONE")
 #define BT_STR_CANCEL dgettext("sys_string", "IDS_COM_SK_CANCEL")
+
 
 typedef enum {
 	BT_CHANGED_MODE_ENABLE,
@@ -154,6 +160,7 @@ typedef enum {
 	BT_EVENT_EXCHANGE_REQUEST = 0x1000,
 	BT_EVENT_PHONEBOOK_REQUEST = 0x2000,
 	BT_EVENT_MESSAGE_REQUEST = 0x4000,
+	BT_EVENT_RETRY_PAIR_REQUEST = 0x8000,
 } bt_popup_event_type_t;
 
 typedef enum {
@@ -171,12 +178,10 @@ struct bt_popup_appdata {
 
 	/* Passkey layout objects */
 	Evas_Object *entry;
-	Evas_Object *editfield;
 	Evas_Object *edit_field_save_btn;
 	Evas_Object *ticker_noti;
 
 	Ecore_Timer *timer;
-	Ecore_Event_Handler *event_handle;
 
 	DBusGProxy *agent_proxy;
 	DBusGProxy *obex_proxy;

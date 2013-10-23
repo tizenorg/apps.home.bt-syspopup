@@ -14,7 +14,6 @@ BuildRequires:  pkgconfig(evas)
 BuildRequires:  pkgconfig(ecore-input)
 BuildRequires:  pkgconfig(ethumb)
 BuildRequires:  pkgconfig(elementary)
-BuildRequires:  efl-assist-devel
 BuildRequires:  pkgconfig(efreet)
 BuildRequires:  pkgconfig(sysman)
 BuildRequires:  pkgconfig(sensor)

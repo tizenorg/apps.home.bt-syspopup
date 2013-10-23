@@ -77,7 +77,8 @@ collections {
 				}
 			}
 
-			part { name: "label_space";
+			part {
+				name: "label_space";
 				type: SWALLOW;
 				scale: 1;
 				description {
@@ -145,10 +146,12 @@ collections {
 					min: 0 0;
 					fixed: 0 1;
 					rel1 {
-						relative: 1.0 0.0;to_x: "pad_l";
+						relative: 1.0 0.0;
+						to_x: "pad_l";
 					}
 					rel2 {
-						relative: 0.0 0.0;to_x: "pad_r";
+						relative: 0.0 0.0;
+						to_x: "pad_r";
 					}
 				}
 			}
@@ -158,8 +161,8 @@ collections {
 				scale: 1;
 				description {
 					state: "default" 0.0;
-					min: 0 0;
-					max: 0 0;
+					min: 26 0;
+					max: 26 0;
 					fixed: 1 0;
 					rel1 {
 						relative: 0.0 0.0;
@@ -176,8 +179,8 @@ collections {
 				scale: 1;
 				description {
 					state: "default" 0.0;
-					min: 0 0;
-					max: 0 0;
+					min: 26 0;
+					max: 26 0;
 					fixed: 1 0;
 					rel1 {
 						relative: 1.0 0.0;
@@ -206,22 +209,61 @@ collections {
 					}
 				}
 			}
+			part { name: "bottom_pad";
+				type: SPACER;
+				scale: 1;
+				description {
+					state: "default" 0.0;
+					align: 0.0 1.0;
+					min: 0 32;
+					fixed: 0 1;
+					rel1 {
+						relative: 1.0 1.0;
+						to_x: "pad_l";
+					}
+					rel2 {
+						relative: 0.0 1.0;
+						to_x: "pad_r";
+					}
+				}
+			}
 			part {
 				name: "pad_b";
 				type: SPACER;
 				scale: 1;
 				description {
 					state: "default" 0.0;
-					align: 0.5 1.0;
-					min: 400 84;
+					align: 0.0 1.0;
+					min: 0 84;
 					fixed: 1 1;
 					rel1 {
-						relative: 0.5 1.0;
+						relative: 0.0 0.0;
+						to: "bottom_pad";
 					}
 					rel2 {
-						relative: 0.5 1.0;
+						relative: 1.0 0.0;
+						to: "bottom_pad";
 					}
 				}
+			}
+			part {
+				name: "end_field";
+				type: SPACER;
+				scale: 1;
+                                description {
+                                        state: "default" 0.0;
+                                        align: 0.5 1.0;
+                                        min: 0 63;
+                                        fixed: 0 1;
+                                        rel1 {
+						relative: 0.0 1.0;
+						to: "pad_b";
+                                        }
+                                        rel2 {
+						relative: 1.0 1.0;
+						to: "pad_b";
+                                        }
+                                }
 			}
 			part {
 				name: "check";
@@ -231,50 +273,10 @@ collections {
 				repeat_events: 1;
 				description {
 					state: "default" 0.0;
-					align: 0.0 1.0;
-					min: 63 63;
-					max: 63 63;
+					align: 0.0 0.5;
 					fixed: 1 1;
-					rel1.to: "pad_b";
-					rel2 {
-						relative: 0.0 1.0;
-						to: "pad_b";
-					}
-				}
-			}
-			part {
-				name: "pad_after_check";
-				type: SPACER;
-				scale: 1;
-				description {
-					state: "default" 0.0;
-					align: 0.0 0.0;
-					min: 16 63;
-					fixed: 1 1;
-					rel1 {
-						relative: 1.0 0.0;to: "check";
-					}
-					rel2 {
-						relative: 1.0 1.0;to: "check";
-					}
-				}
-			}
-			part {
-				name: "check_label";
-				type: SWALLOW;
-				scale: 1;
-				description {
-					state: "default" 0.0;
-					rel1 {
-						relative: 1.0 0.0;
-						to_x: "pad_after_check";
-						to_y: "check";
-					}
-					rel2 {
-						relative: 1.0 1.0;
-						to_x: "pad_b";
-						to_y: "check";
-					}
+					rel1.to: "end_field";
+					rel2.to: "end_field";
 				}
 			}
 		}
