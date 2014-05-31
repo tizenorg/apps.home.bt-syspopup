@@ -1,0 +1,282 @@
+/*
+ * Copyright (c) 2011 Samsung Electronics Co., Ltd All Rights Reserved
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+RESOURCE_IMAGE("b_setup_wizard_watch_01.png");
+RESOURCE_IMAGE("b_setup_wizard_device_01.png");
+RESOURCE_IMAGE("b_setup_wizard_pairing_01.png");
+
+
+#define BG_COLOR	0 0 0 255
+#define FONT_COLOR	255 144 0 255
+#define HOR_SIZE 320
+#define VER_SIZE 320
+#define BUTTON_HEIGHT 76
+
+#define WTCH_PAD_LEFT 59
+#define WTCH_PAD_TOP 13
+#define PHN_PAD_LEFT 320-66-60
+#define PHN_PAD_TOP 9
+#define ICON_PAD_LEFT 59+54+17-7
+#define ICON_PAD_TOP 9+26
+
+#define W_W 47
+#define W_H 93
+#define P_W 66
+#define P_H 105
+#define L_W 54
+#define L_H 54
+
+
+group { name: "passkey_confirm";
+	parts {
+		part { name: "bg";
+			type: RECT;
+			scale: 1;
+			description { state: "default" 0.0;
+				min: HOR_SIZE VER_SIZE;
+				color: BG_COLOR;
+			}
+		}
+
+		part {
+			name: "scroller";
+			type: SWALLOW;
+			scale: 1;
+			description {
+				state: "default" 0.0;
+				rel1 {
+					relative: 0.0 0.0;
+					to:"bg";
+				}
+				rel2 {
+					relative: 1.0 (VER_SIZE-BUTTON_HEIGHT)/VER_SIZE;
+					to:"bg";
+				}
+				align: 0.0 0.0;
+			}
+		}
+
+		part { name: "btn1";
+			type: SWALLOW;
+			scale: 1;
+			description { state: "default" 0.0;
+				fixed: 1 1;
+				rel1 {
+					relative: 0.0 1.0;
+				}
+				rel2 {
+					to_x: "padding";
+					relative: 0.0 1.0;
+				}
+				min: 0 BUTTON_HEIGHT;
+				align: 0.5 1;
+			}
+		}
+		part { name: "padding";
+			type: SPACER;
+			scale: 1;
+			mouse_events: 0;
+			description { state: "default" 0.0;
+				rel1 {
+					relative: 0.5 1.0;
+				}
+				rel2 {
+					relative: 0.5 1.0;
+				}
+				align: 0.5 1.0;
+				min: 1 0;
+				max: 1 0;
+				fixed: 1 0;
+			}
+		}
+		part { name: "btn2";
+			type: SWALLOW;
+			scale: 1;
+			description { state: "default" 0.0;
+				fixed: 1 1;
+				rel1 {
+					to_x: "padding";
+					relative: 1.0 1.0;
+				}
+				rel2 {
+					relative: 1.0 1.0;
+				}
+				min: 0 BUTTON_HEIGHT;
+				align: 0.5 1;
+			}
+		}
+	}
+}
+
+group { name: "passkey_confirm_scroller";
+	parts{
+		part {
+			name: "background";
+			type: RECT;
+			mouse_events: 1;
+			description {
+				state: "default" 0;
+				color: 0 0 0 255;
+			}
+		}
+		part {
+			name: "elm.swallow.img.watch";
+			type: SWALLOW;
+			scale: 1;
+			description {
+				state: "default" 0;
+				visible: 1;
+				fixed: 1 1;
+				min: W_W W_H;
+				max: W_W W_H;
+				rel1 {
+					relative: 0 0;
+					offset: WTCH_PAD_LEFT WTCH_PAD_TOP;
+					to:"background";
+				}
+				rel2 {
+					relative: 0 0;
+					offset: (WTCH_PAD_LEFT+W_W) (WTCH_PAD_TOP+W_H);
+					to:"background";
+				}
+			}
+		}
+		part {
+			name: "elm.swallow.img.phone";
+			type: SWALLOW;
+			scale: 1;
+			description {
+				state: "default" 0;
+				visible: 1;
+				fixed: 1 1;
+				min: P_W P_H;
+				max: P_W P_H;
+				rel1 {
+					relative: 0.0 0.0;
+					offset: PHN_PAD_LEFT PHN_PAD_TOP;
+					to:"background";
+				}
+				rel2 {
+					relative: 0.0 0.0;
+					offset: (PHN_PAD_LEFT+P_W) (PHN_PAD_TOP+P_H);
+					to:"background";
+				}
+			}
+		}
+		part {
+			name: "elm.swallow.img.icon";
+			type: IMAGE;
+			scale: 1;
+			description {
+				state: "default" 0.0;
+				visible: 1;
+				fixed: 1 1;
+				min: L_W L_H;
+				max: L_W L_H;
+				image.normal: "b_setup_wizard_pairing_01.png";
+				rel1 {
+					relative: 0.0 0.0;
+					offset: ICON_PAD_LEFT ICON_PAD_TOP;
+					to:"background";
+				}
+				rel2 {
+					relative: 0.0 0.0;
+					offset: (ICON_PAD_LEFT+L_W) (ICON_PAD_TOP+L_H);
+					to:"background";
+				}
+				map {
+					on: 1;
+					smooth: 0;
+					rotation {
+						z:0;
+					}
+				}
+			}
+			description {
+				state: "state1" 0.1;
+				inherit: "default" 0.0;
+				map {
+					on: 1;
+					smooth: 0;
+					rotation {
+						z:180;
+					}
+				}
+			}
+			description {
+				state: "state2" 0.2;
+				inherit: "default" 0.0;
+				map {
+					on: 1;
+					smooth: 0;
+					rotation {
+						z:360;
+					}
+				}
+			}
+		}
+		part {
+			name: "elm.text.block";
+			type: SWALLOW;
+			scale: 1;
+			description {
+				state: "default" 0.0;
+				rel1 {
+					relative: 0.0 0.0;
+					offset: 0 9+P_H+18;
+					to:"background";
+				}
+				rel2 {
+					relative: 1.0 1.0;
+					to:"background";
+				}
+				align: 0.0 0.0;
+			}
+		}
+	}
+	programs {
+		program {
+			signal: "load";
+			source: "";
+			in: 0.0 0.0;
+			after: "animation";
+		}
+		program {
+			name: "animation";
+			action: STATE_SET "default" 0.0;
+			target: "elm.swallow.img.icon";
+			transition: LINEAR 0.0;
+			after: "animation1";
+		}
+		program {
+			name: "animation1";
+			action: STATE_SET "state1" 0.1;
+			target: "elm.swallow.img.icon";
+			transition: LINEAR 0.7;
+			after: "animation2";
+		}
+		program {
+			name: "animation2";
+			action: STATE_SET "state2" 0.2;
+			target: "elm.swallow.img.icon";
+			transition: LINEAR 0.7;
+			after: "animation";
+		}
+	}
+}
+
+

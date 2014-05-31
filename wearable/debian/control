@@ -1,0 +1,19 @@
+Source: bt-syspopup
+Section: main
+Priority: extra
+Maintainer: Hocheol Seo <hocheol.seo@samsung.com>, DoHyun Pyun <dh79.pyun@samsung.com>, InJun Yang <injun.yang@samsung.com>, Chanyeol Park <chanyeol.park@samsung.com>
+Uploaders: Sunil Behera <sunil.behera@samsung.com>, Syam Sidhardhan <s.syam@samsung.com>
+Build-Depends: debhelper (>= 5),libevas-dev,libecore-dev,libethumb-dev,libelm-dev,libefreet-dev, libslp-sensor-dev,libappcore-efl-dev,libdevman-dev, libslp-utilx-dev, syspopup-dev, dlog-dev, libslp-pm-dev, libdbus-glib-1-dev, libglib2.0-dev, libaul-1-dev
+Standards-Version: 0.1.0 
+
+Package: org.tizen.bt-syspopup
+Section: main
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libslp-utilx-0, libdlog-0
+Description: bluetooth system-popup application (bluetooth system popup)
+
+Package: org.tizen.bt-syspopup-dbg
+Section: debug
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: bluetooth system-popup application (unstripped)

@@ -1,0 +1,150 @@
+/*
+ * Copyright (c) 2011 Samsung Electronics Co., Ltd All Rights Reserved
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+group {
+	name: "passwd_popup";
+	images {
+		image: "00_search_edit_field_bg.png" COMP;
+	}
+	parts {
+		part {
+			name: "pad_t";
+			type: SPACER;
+			scale: 1;
+			description {
+				state: "default" 0.0;
+				align: 0.5 0.0;
+				min: 0 0;
+				fixed: 0 1;
+				rel1 {
+					relative: 1.0 0.0;to_x: "pad_l";
+				}
+				rel2 {
+					relative: 0.0 0.0;to_x: "pad_r";
+				}
+			}
+		}
+		part {
+			name: "pad_l";
+			type: SPACER;
+			scale: 1;
+			description {
+				state: "default" 0.0;
+				min: 0 0;
+				max: 0 0;
+				fixed: 1 0;
+				rel1 {
+					relative: 0.0 0.0;
+				}
+				rel2 {
+					relative: 0.0 1.0;
+				}
+				align: 0.0 0.0;
+			}
+		}
+		part {
+			name: "pad_r";
+			type: SPACER;
+			scale: 1;
+			description {
+				state: "default" 0.0;
+				min: 0 0;
+				max: 0 0;
+				fixed: 1 0;
+				rel1 {
+					relative: 1.0 0.0;
+				}
+				rel2 {
+					relative: 1.0 1.0;
+				}
+				align: 1.0 0.0;
+			}
+		}
+
+		part { name: "label";
+			type: SWALLOW;
+			scale: 1;
+			description {
+				state: "default" 0.0;
+				rel1 {
+					relative: 1.0 1.0;
+					to_x: "pad_l";
+					to_y: "pad_t";
+				}
+				rel2 {
+					relative: 0.0 0.0;
+					to_x: "pad_r";
+					to_y: "label_space";
+				}
+			}
+		}
+
+		part { name: "label_space";
+			type: SWALLOW;
+			scale: 1;
+			description {
+				state: "default" 0.0;
+				rel1 {
+					relative: 1.0 1.0;
+					to_x: "pad_l";
+					to_y: "label";
+				}
+				rel2 {
+					relative: 0.0 0.0;
+					to_x: "pad_r";
+					to_y: "entry";
+				}
+			}
+		}
+
+		part {
+			name: "entry";
+			type: SWALLOW;
+			scale: 1;
+			description {
+				state: "default" 0.0;
+				rel1 {
+					relative: 1.0 1.0;
+					to_x: "pad_l";
+					to_y: "label";
+				}
+				rel2 {
+					relative: 0.0 0.0;
+					to_x: "pad_r";
+					to_y: "pad_b";
+				}
+			}
+		}
+		part {
+			name: "pad_b";
+			type: SPACER;
+			scale: 1;
+			description {
+				state: "default" 0.0;
+				align: 0.0 1.0;
+				fixed: 1 1;
+				rel1 {
+					relative: 0.0 1.0;
+				}
+				rel2 {
+					relative: 0.0 1.0;
+				}
+			}
+		}
+	}
+}
+

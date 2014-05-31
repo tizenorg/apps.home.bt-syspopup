@@ -1,0 +1,166 @@
+/*
+ * Copyright (c) 2011 Samsung Electronics Co., Ltd All Rights Reserved
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+images {
+	image: "b_setup_wizard_bluetooth_pairing.png" COMP;
+}
+
+#define BG_COLOR	0 0 0 255
+#define HOR_SIZE 320
+#define VER_SIZE 320
+#define BUTTON_HEIGHT 76
+
+group { name: "passkey_confirm_popup";
+	parts {
+		part { name: "bg";
+			type: RECT;
+			scale: 1;
+			description { state: "default" 0.0;
+				min: HOR_SIZE VER_SIZE;
+				color: BG_COLOR;
+			}
+		}
+
+		part {
+			name: "scroller";
+			type: SWALLOW;
+			scale: 1;
+			description {
+				state: "default" 0.0;
+				rel1 {
+					relative: 0.0 0.0;
+					to:"bg";
+				}
+				rel2 {
+					relative: 1.0 (VER_SIZE-BUTTON_HEIGHT)/VER_SIZE;
+					to:"bg";
+				}
+				align: 0.0 0.0;
+			}
+		}
+
+		part { name: "btn1";
+			type: SWALLOW;
+			scale: 1;
+			description { state: "default" 0.0;
+				fixed: 1 1;
+				rel1 {
+					relative: 0.0 1.0;
+				}
+				rel2 {
+					to_x: "padding";
+					relative: 0.0 1.0;
+				}
+				min: 0 BUTTON_HEIGHT;
+				align: 0.5 1;
+			}
+		}
+		part { name: "padding";
+			type: SPACER;
+			scale: 1;
+			mouse_events: 0;
+			description { state: "default" 0.0;
+				rel1 {
+					relative: 0.5 1.0;
+				}
+				rel2 {
+					relative: 0.5 1.0;
+				}
+				align: 0.5 1.0;
+				min: 1 0;
+				max: 1 0;
+				fixed: 1 0;
+			}
+		}
+		part { name: "btn2";
+			type: SWALLOW;
+			scale: 1;
+			description { state: "default" 0.0;
+				fixed: 1 1;
+				rel1 {
+					to_x: "padding";
+					relative: 1.0 1.0;
+				}
+				rel2 {
+					relative: 1.0 1.0;
+				}
+				min: 0 BUTTON_HEIGHT;
+				align: 0.5 1;
+			}
+		}
+	}
+}
+
+group { name: "passkey_confirm_popup_scroller";
+	parts {
+		part { name: "bg";
+			type: RECT;
+			scale: 1;
+			description {
+				state: "default" 0.0;
+				rel1 { relative: 0.0 0.0; }
+				rel2 { relative: 1.0 1.0; }
+				color: BG_COLOR;
+			}
+		}
+		part {
+			name: "elm.image";
+			type: IMAGE;
+			scale: 1;
+			description {
+				state: "default" 0.0;
+				rel1 {
+					relative: 0 0;
+					to: "bg";
+					offset: 39 0;
+				}
+				rel2 {
+					relative: 0 0;
+					to: "bg";
+					offset: (39+242) 124;
+				}
+				visible: 1;
+				image {
+					normal: "b_setup_wizard_bluetooth_pairing.png";
+				}
+				align: 0.5 0.0;
+			}
+			description {
+				state: "show" 0.0;
+				inherit: "default" 0.0;
+				visible: 1;
+			}
+		}
+		part {
+			name: "elm.text.block";
+			type: SWALLOW;
+			scale: 1;
+			description {
+				state: "default" 0.0;
+				rel1 {
+					relative: 0.0 0.0;
+					to: "bg";
+					offset: 0 124;
+				}
+				rel2 {
+					relative: 1.0 1.0;
+					offset: -16 0;
+				}
+			}
+		}
+	}
+}

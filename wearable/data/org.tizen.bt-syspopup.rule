@@ -1,0 +1,31 @@
+# Request
+org.tizen.bt-syspopup ug_bluetooth r
+org.tizen.bt-syspopup system::use_internet r
+org.tizen.bt-syspopup xorg rw
+org.tizen.bt-syspopup isf rwx
+org.tizen.bt-syspopup ail::db rw
+org.tizen.bt-syspopup syspopup::db rwx
+org.tizen.bt-syspopup dbus rw
+org.tizen.bt-syspopup sound_server rw
+org.tizen.bt-syspopup power_manager w
+org.tizen.bt-syspopup immvibed rw
+org.tizen.bt-syspopup svi-data rx
+org.tizen.bt-syspopup ui-gadget::client rw
+org.tizen.bt-syspopup deviced rwx
+org.tizen.bt-syspopup deviced::display rw
+org.tizen.bt-syspopup org.tizen.b2-setup-wizard rw
+org.tizen.bt-syspopup factory-reset rx
+
+org.tizen.bt-syspopup sap x
+org.tizen.bt-syspopup org.tizen.clocksetting rwx
+
+# Permit
+deviced org.tizen.bt-syspopup rwx
+org.tizen.app-tray org.tizen.bt-syspopup rx
+e17 org.tizen.bt-syspopup w
+
+# default include
+org.tizen.bt-syspopup app.default include
+
+org.tizen.bt-syspopup org.tizen.setting::system rxl
+org.tizen.bt-syspopup org.tizen.bt-connection-popup x
