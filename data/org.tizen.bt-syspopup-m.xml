@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns="http://tizen.org/ns/packages" package="org.tizen.bt-syspopup" version="2.0.25" install-location="internal-only">
+	<label>Bluetooth System Popup</label>
+	<author email="dh79.pyun@samsung.com" href="www.samsung.com">DoHyun Pyun</author>
+	<description>Bluetooth System Popup</description>
+	<ui-application appid="org.tizen.bt-syspopup" exec="/usr/apps/org.tizen.bt-syspopup/bin/bt-syspopup" nodisplay="true" multiple="false" type="capp" taskmanage="false">
+		<label>Bluetooth System Popup</label>
+		<icon>org.tizen.bt-syspopup.png</icon>
+	</ui-application>
+</manifest>

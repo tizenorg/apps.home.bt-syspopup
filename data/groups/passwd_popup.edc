@@ -1,0 +1,354 @@
+/*
+ * Copyright (c) 2011 Samsung Electronics Co., Ltd All Rights Reserved
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+#define WIN_WIDTH 360
+#define WIN_HEIGHT 480
+
+RESOURCE_IMAGE("b_privacy_lock_button_00.png");
+RESOURCE_IMAGE("b_privacy_lock_button_01.png");
+RESOURCE_IMAGE("b_privacy_lock_button_02.png");
+RESOURCE_IMAGE("b_privacy_lock_button_03.png");
+RESOURCE_IMAGE("b_privacy_lock_button_04.png");
+RESOURCE_IMAGE("b_privacy_lock_button_05.png");
+RESOURCE_IMAGE("b_privacy_lock_button_06.png");
+RESOURCE_IMAGE("b_privacy_lock_button_07.png");
+RESOURCE_IMAGE("b_privacy_lock_button_08.png");
+RESOURCE_IMAGE("b_privacy_lock_button_09.png");
+RESOURCE_IMAGE("b_privacy_lock_clear_btn.png");
+RESOURCE_IMAGE("b_privacy_lock_button_clear.png");
+
+#define KEYPAD_BUTTON_DESC_CC(part_name, sx, sy, dx, dy, ox, oy)\
+	part {\
+		name : part_name",bg";\
+		type : RECT;\
+		mouse_events : 1;\
+		description {\
+			state : "default" 0.0;\
+			min : dx dy;\
+			fixed : 1 1;\
+			rel1 { relative : sx sy; offset: ox oy; }\
+			rel2 { relative : sx sy; }\
+			color_class : "AO012L2";\
+			align : 0.0 0.0;\
+		}\
+		description {\
+			state : "pressed" 0.0;\
+			inherit : "default" 0.0;\
+			color_class : "AO012L2P";\
+		}\
+	}\
+	part {\
+		name : part_name;\
+		type : IMAGE;\
+		mouse_events : 1;\
+		description {\
+			state : "default" 0.0;\
+			rel1.to : part_name",bg";	\
+			rel2.to : part_name",bg";	\
+			min : dx 63;\
+			max : dx 63;\
+			fixed : 1 1;\
+			image { normal : "b_privacy_lock_"part_name".png"; }\
+			color_class : "AO012";\
+		}\
+		description {\
+			state : "disable" 0.0;\
+			visible : 0;\
+		}\
+	}\
+	part {\
+		name : part_name",sw";\
+		type : SWALLOW;\
+		description {\
+			state : "default" 0.0;\
+			fixed : 1 1;\
+			rel1.to : part_name",bg";	\
+			rel2.to : part_name",bg";	\
+		}\
+		description {\
+			state : "hidden" 0.0;\
+			visible : 0;\
+		}\
+	}
+
+#define KEYPAD_TXT_DESC_CC(part_name, sx, sy, dx, dy,ox,oy)\
+	part {\
+		name : part_name",bg";\
+		type : RECT;\
+		mouse_events : 1;\
+		description {\
+			state : "default" 0.0;\
+			min : dx dy;\
+			fixed : 1 1;\
+			rel1 { relative : sx sy; offset: ox oy; }\
+			rel2 { relative : sx sy; }\
+			color_class : "AO012L2";\
+			align : 0.0 0.0;\
+		}\
+		description {\
+			state : "pressed" 0.0;\
+			inherit : "default" 0.0;\
+			color_class : "AO012L2P";\
+		}\
+	}\
+	part {\
+		name : part_name;\
+		type : TEXT;\
+		mouse_events : 1;\
+		description {\
+			state : "default" 0.0;\
+			rel1.to : part_name",bg";\
+			rel2.to : part_name",bg";\
+			color : 255 255 255 255;\
+			text {\
+				font : "Tizen:style=Regular";\
+				text_class : tizen;\
+				size : 32;\
+			}\
+		}\
+		description {\
+			state : "disable" 0.0;\
+			inherit : "default" 0.0;\
+			color : 128 128 128 255;\
+		}\
+	}\
+	part {\
+		name : part_name",sw";\
+		type : SWALLOW;\
+		description {\
+			state : "default" 0.0;\
+			fixed : 1 1;\
+			rel1.to : part_name",bg";	\
+			rel2.to : part_name",bg";	\
+		}\
+		description {\
+			state : "hidden" 0.0;\
+			visible : 0;\
+		}\
+	}
+
+#define KEYPAD_BUTTON_PGM(part_name)\
+	program {\
+		name : "keypad,"part_name",release";\
+		signal : "normal";\
+		source : part_name;\
+		action : STATE_SET "default" 0.0;\
+		target : part_name",bg";\
+	}\
+	program {\
+		name : "keypad,"part_name",press";\
+		signal : "pressed";\
+		source : part_name;\
+		action : STATE_SET "pressed" 0.0;\
+		target : part_name",bg";\
+	}\
+	program {\
+		name : "keypad,"part_name",disable";\
+		signal : "disable";\
+		source : part_name;\
+		action : STATE_SET "disable" 0.0;\
+		target : part_name;\
+	}\
+	program {\
+		name : "keypad,"part_name",enable";\
+		signal : "enable";\
+		source : part_name;\
+		action : STATE_SET "default" 0.0;\
+		target : part_name;\
+	}
+
+#define KEYPAD_TXT_PGM(part_name)\
+	program {\
+		name : "keypad,"part_name",release";\
+		signal : "normal";\
+		source : part_name;\
+		action : STATE_SET "default" 0.0;\
+		target : part_name",bg";\
+	}\
+	program {\
+		name : "keypad,"part_name",press";\
+		signal : "pressed";\
+		source : part_name;\
+		action : STATE_SET "pressed" 0.0;\
+		target : part_name",bg";\
+	}\
+	program {\
+		name : "keypad,"part_name",disable";\
+		signal : "disable";\
+		source : part_name;\
+		action : STATE_SET "disable" 0.0;\
+		target : part_name;\
+	}\
+	program {\
+		name : "keypad,"part_name",enable";\
+		signal : "enable";\
+		source : part_name;\
+		action : STATE_SET "default" 0.0;\
+		target : part_name;\
+	}
+
+#define FOCUS_TARGET(part_name)\
+	target : part_name",sw";
+
+group {
+	name: "passwd_popup";
+	parts {
+		part{
+			name: "base";
+			type: RECT;
+			scale: 1;
+			description{
+				state: "default" 0.0;
+				visible: 1;
+				rel1 { relative: 0.0 0.0; }
+				rel2 { relative: 1.0 1.0; }
+				color_class : "B011";
+			}
+		}
+		part { name: "label";
+			type: SWALLOW;
+			scale: 1;
+			description {
+				state: "default" 0.0;
+				rel1 { relative: 6/WIN_WIDTH 0.0; to: "base"; offset: 0 0; }
+				rel2 { relative: (WIN_WIDTH-6)/WIN_WIDTH 0.0; to: "base"; offset: 0 11+66; }
+			}
+		}
+		part{
+			name: "pass.txt.bg";
+			type: RECT;
+			scale: 1;
+			description {
+				state: "default" 0.0;
+				rel1 { relative: 0.0 0.0; to: "base"; offset: 0 74+8; }
+				rel2 { relative: 1.0 0.0; to: "base"; offset: 0 74+8+42; }
+				color_class : "B011";
+			}
+		}
+		part {
+			name: "elm.text.password";
+			type: TEXT;
+			mouse_events: 0;
+			scale: 1;
+			description {
+				state: "default" 0.0;
+				rel1 { to: "pass.txt.bg"; }
+				rel2 { to: "pass.txt.bg"; }
+				color_class: "AT013";
+				text {
+					text_class: "AT013";
+					align: 0.5 0.5;
+				}
+			}
+		}
+		part{
+			name: "sw.keypad";
+			type: SWALLOW;
+			scale: 1;
+			description{
+				state: "default" 0.0;
+				visible: 1;
+				rel1 { relative: 0.0 0.0; to: "base"; offset: 0 74+8+42; }
+				rel2 { relative: 1.0 0.0; to: "base"; offset: 0 74+8+42+299; }
+			}
+		}
+	}
+}
+
+group {
+	name: "keypad";
+	parts {
+		part {
+			name : "rect.bg";
+			type : RECT;
+			mouse_events : 1;
+			description {
+				fixed: 1 1;
+				state : "default" 0.0;
+				color_class : "AO012L1";
+			}
+		}
+
+		KEYPAD_BUTTON_DESC_CC("button_01", 0.0, 0.0, 117+1, 70, 0,1)
+		KEYPAD_BUTTON_DESC_CC("button_02", (117+4)/WIN_WIDTH, 0.0, 117+1, 70, 1,1)
+		KEYPAD_BUTTON_DESC_CC("button_03", (118+4)*2/WIN_WIDTH, 0.0, 117, 70, 0,1)
+
+		KEYPAD_BUTTON_DESC_CC("button_04", 0.0, (71+4)/299, 117+1, 70, 0,1)
+		KEYPAD_BUTTON_DESC_CC("button_05", (117+4)/WIN_WIDTH, (71+4)/299, 117+1, 70, 1,1)
+		KEYPAD_BUTTON_DESC_CC("button_06", (118+4)*2/WIN_WIDTH, (71+4)/299, 117, 70, 0,1)
+
+		KEYPAD_BUTTON_DESC_CC("button_07", 0.0, (71+4)*2/299, 117+1, 70, 0,1)
+		KEYPAD_BUTTON_DESC_CC("button_08", (117+4)/WIN_WIDTH, (71+4)*2/299, 117+1, 70, 1,1)
+		KEYPAD_BUTTON_DESC_CC("button_09", (118+4)*2/WIN_WIDTH, (71+4)*2/299, 117, 70, 0,1)
+
+		KEYPAD_TXT_DESC_CC("confirm", (118+4)*2/WIN_WIDTH, (71+4)*3/299, 117, 74, 0,2)
+		KEYPAD_BUTTON_DESC_CC("button_00", (117+4)/WIN_WIDTH, (71+4)*3/299, 117+1, 74, 1,2)
+		KEYPAD_BUTTON_DESC_CC("button_clear", 0.0, (71+4)*3/299, 117+1, 74, 0,2)
+
+	}
+
+	programs {
+		KEYPAD_BUTTON_PGM("button_00")
+		KEYPAD_BUTTON_PGM("button_01")
+		KEYPAD_BUTTON_PGM("button_02")
+		KEYPAD_BUTTON_PGM("button_03")
+		KEYPAD_BUTTON_PGM("button_04")
+		KEYPAD_BUTTON_PGM("button_05")
+		KEYPAD_BUTTON_PGM("button_06")
+		KEYPAD_BUTTON_PGM("button_07")
+		KEYPAD_BUTTON_PGM("button_08")
+		KEYPAD_BUTTON_PGM("button_09")
+		KEYPAD_BUTTON_PGM("button_clear")
+		KEYPAD_TXT_PGM("confirm")
+
+		program {
+			name : "set,tts,enable";
+			signal : "set,tts,enable";
+			source : "bg";
+			action : STATE_SET "default" 0.0;
+			FOCUS_TARGET("button_00")
+			FOCUS_TARGET("button_01")
+			FOCUS_TARGET("button_02")
+			FOCUS_TARGET("button_03")
+			FOCUS_TARGET("button_04")
+			FOCUS_TARGET("button_05")
+			FOCUS_TARGET("button_06")
+			FOCUS_TARGET("button_07")
+			FOCUS_TARGET("button_08")
+			FOCUS_TARGET("button_09")
+			FOCUS_TARGET("button_clear")
+			FOCUS_TARGET("confirm")
+		}
+		program {
+			name : "set,tts,disable";
+			signal : "set,tts,disable";
+			source : "bg";
+			action : STATE_SET "hidden" 0.0;
+			FOCUS_TARGET("button_00")
+			FOCUS_TARGET("button_01")
+			FOCUS_TARGET("button_02")
+			FOCUS_TARGET("button_03")
+			FOCUS_TARGET("button_04")
+			FOCUS_TARGET("button_05")
+			FOCUS_TARGET("button_06")
+			FOCUS_TARGET("button_07")
+			FOCUS_TARGET("button_08")
+			FOCUS_TARGET("button_09")
+			FOCUS_TARGET("button_clear")
+			FOCUS_TARGET("confirm")
+		}
+	}
+}
