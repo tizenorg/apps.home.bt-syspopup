@@ -1,0 +1,18 @@
+<manifest>
+    <define>
+        <domain name="org.tizen.bt-syspopup"/>
+	<request>
+		<smack request="aul::launch" type="x"/>
+	</request>
+    </define>
+    <assign>
+        <filesystem path="/usr/share/applications/org.tizen.bt-syspopup.desktop" label="_"/>
+        <filesystem path="/usr/share/icons/default/small/org.tizen.bt-syspopup.png" label="_"/>
+        <filesystem path="/opt/share/process-info/bt-syspopup.ini" label="_"/>
+		<filesystem path="/usr/apps/org.tizen.bt-syspopup/shared/res/tables/org.tizen.bt-syspopup_ChangeableColorTable.xml" label="_"/>
+		<filesystem path="/usr/apps/org.tizen.bt-syspopup/shared/res/tables/org.tizen.bt-syspopup_FontInfoTable.xml" label="_"/>
+    </assign>
+    <request>
+        <domain name="org.tizen.bt-syspopup"/>
+    </request>
+</manifest>

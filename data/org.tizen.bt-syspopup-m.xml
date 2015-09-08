@@ -3,7 +3,7 @@
 	<label>Bluetooth System Popup</label>
 	<author email="dh79.pyun@samsung.com" href="www.samsung.com">DoHyun Pyun</author>
 	<description>Bluetooth System Popup</description>
-	<ui-application appid="org.tizen.bt-syspopup" exec="/opt/apps/org.tizen.bt-syspopup/bin/bt-syspopup" nodisplay="true" multiple="false" type="capp" taskmanage="false">
+	<ui-application appid="org.tizen.bt-syspopup" exec="/usr/apps/org.tizen.bt-syspopup/bin/bt-syspopup" nodisplay="true" multiple="false" type="capp" taskmanage="false">
 		<label>Bluetooth System Popup</label>
 		<icon>org.tizen.bt-syspopup.png</icon>
 	</ui-application>
