@@ -9,15 +9,20 @@ Group:      main
 License:    Flora-1.1
 Source0:    %{name}-%{version}.tar.gz
 Requires(post): sys-assert
+
+%if "%{?tizen_profile_name}" == "tv"
+ExcludeArch: %{arm} %ix86 x86_64
+%endif
+
 BuildRequires:  pkgconfig(evas)
 %if "%{?tizen_profile_name}" == "mobile"
-BuildRequires:  pkgconfig(efl-assist)
+BuildRequires:  pkgconfig(efl-extension)
 %endif
 BuildRequires:  pkgconfig(ecore-input)
 BuildRequires:  pkgconfig(ethumb)
 BuildRequires:  pkgconfig(elementary)
 %if "%{?tizen_profile_name}" == "wearable"
-BuildRequires:  efl-assist-devel
+BuildRequires:  pkgconfig(efl-extension)
 %endif
 BuildRequires:  pkgconfig(efreet)
 BuildRequires:  pkgconfig(sensor)
@@ -28,6 +33,8 @@ BuildRequires:  pkgconfig(syspopup)
 BuildRequires:  pkgconfig(syspopup-caller)
 %endif
 BuildRequires:  pkgconfig(dlog)
+BuildRequires:  pkgconfig(capi-system-device)
+BuildRequires:  pkgconfig(capi-media-player)
 BuildRequires:  pkgconfig(deviced)
 BuildRequires:  pkgconfig(dbus-glib-1)
 BuildRequires:  pkgconfig(glib-2.0)

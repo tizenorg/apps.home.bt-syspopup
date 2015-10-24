@@ -28,6 +28,7 @@
 #include <dlog.h>
 #include <glib.h>
 #include <dbus/dbus-glib.h>
+#include <player.h>
 
 #ifndef PACKAGE_NAME
 #define PACKAGE_NAME "org.tizen.bt-syspopup"
@@ -146,7 +147,7 @@
 	dgettext(BT_COMMON_PKG, "IDS_BT_POP_PS_ALREADY_EXISTS_OVERWRITE_Q")
 
 #define BT_STR_ENTER_PS_ON_PS_TO_PAIR \
-	dgettext(BT_COMMON_PKG, "IDS_BT_POP_ENTER_P1SS_ON_P2SS_TO_PAIR_THEN_PRESS_ENTER")
+	dgettext(BT_COMMON_PKG, "IDS_BT_POP_CONFIRM_PASSKEY_IS_P2SS_TO_PAIR_WITH_P1SS")
 
 #define BT_STR_RECEIVE_FILE_FROM_PS_Q \
 	dgettext(BT_COMMON_PKG, "IDS_BT_POP_RECEIVE_FILE_FROM_PS_Q")
@@ -156,7 +157,7 @@
 	dgettext(BT_COMMON_PKG, "IDS_BT_HEADER_BLUETOOTH_PAIRING_REQUEST")
 
 #define BT_STR_ENTER_THE_PIN_TO_PAIR \
-	dgettext(BT_COMMON_PKG, "IDS_BT_POP_ENTER_THE_PIN_TO_PAIR_WITH_PS_HTRY_0000_OR_1234")
+	dgettext(BT_COMMON_PKG, "IDS_BT_POP_ENTER_PIN_TO_PAIR_WITH_PS")
 
 #define BT_STR_SHOW_PASSWORD \
 	dgettext(BT_COMMON_PKG, "IDS_BT_BODY_SHOW_PASSWORD")
@@ -165,7 +166,7 @@
 	dgettext(BT_COMMON_PKG, "IDS_ST_MBODY_SHOW_PIN")
 
 #define BT_STR_CONFIRM_PASSKEY_PS_TO_PAIR_WITH_PS \
-	dgettext(BT_COMMON_PKG, "IDS_BT_POP_CONFIRM_THE_PIN_HP1SS_TO_PAIR_WITH_P2SS")
+    dgettext(BT_COMMON_PKG, "IDS_BT_POP_CONFIRM_PASSKEY_IS_PS_TO_PAIR_WITH_PS")
 
 #define BT_STR_ALLOW_PS_PHONEBOOK_ACCESS_Q \
 	dgettext(BT_COMMON_PKG, "IDS_BT_POP_PS_IS_REQUESTING_PERMISSION_TO_CONNECT_TO_YOUR_CONTACTS")
@@ -238,6 +239,7 @@ typedef enum {
 	BT_EVENT_PHONEBOOK_REQUEST = 0x2000,
 	BT_EVENT_MESSAGE_REQUEST = 0x4000,
 	BT_EVENT_RETRY_PAIR_REQUEST = 0x8000,
+	BT_EVENT_MUSIC_AUTO_CONNECT_REQUEST = 0x1100,
 	BT_EVENT_LEGACY_PAIR_FAILED_FROM_REMOTE,
 } bt_popup_event_type_t;
 
@@ -286,6 +288,9 @@ struct bt_popup_appdata {
 	bt_rotate_mode_t rotation;
 	gboolean make_trusted;
 	bt_popup_event_type_t event_type;
+
+	player_h player;
+	Ecore_Timer *playing_timer;
 };
 
 #endif				/* __DEF_BT_SYSPOPUP_H_ */

@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <dd-display.h>
 #include <app.h>
+#include <device/display.h>
 #include <Ecore_X.h>
 #include <utilX.h>
 #include <vconf.h>
@@ -35,10 +36,10 @@
 #include <feedback.h>
 #include "bt-syspopup-m.h"
 #include <notification.h>
-#include <bundle.h>
+#include <bundle_internal.h>
 #include <app_control.h>
 #include <app_control_internal.h>
-#include <efl_assist.h>
+#include <efl_extension.h>
 
 static void __bluetooth_delete_input_view(struct bt_popup_appdata *ad);
 static void __bluetooth_win_del(void *data);
@@ -66,6 +67,8 @@ static void __bluetooth_terminate(void *data);
 static void __bluetooth_remove_all_event(struct bt_popup_appdata *ad);
 
 static void __bluetooth_set_win_level(Evas_Object *parent);
+
+static void __popup_terminate(void);
 
 static int __bluetooth_term(bundle *b, void *data)
 {
@@ -168,41 +171,216 @@ static void __bluetooth_cleanup_win(struct bt_popup_appdata *ad)
 	}
 }
 
-static void __bluetooth_notify_event(void)
+static void __bluetooth_player_free_job_cb(void *data)
 {
+	FN_START;
+	player_h sound_player = data;
+	player_state_e state = PLAYER_STATE_NONE;
+
+	retm_if(sound_player == NULL, "invalid parameter");
+
+	if (player_get_state(sound_player, &state) == PLAYER_ERROR_NONE) {
+
+		BT_INFO("the state of sound player %d", state);
+
+		if (state == PLAYER_STATE_PLAYING) {
+			player_stop(sound_player);
+			player_unprepare(sound_player);
+		}
+		if (state == PLAYER_STATE_READY) {
+			player_unprepare(sound_player);
+		}
+	}
+	player_destroy(sound_player);
+	FN_END;
+}
+
+static void __bluetooth_player_free(player_h sound_player)
+{
+	FN_START;
+	retm_if(sound_player == NULL, "invalid parameter");
+
+	ecore_job_add(__bluetooth_player_free_job_cb, sound_player);
+	sound_player = NULL;
+	FN_END;
+}
+
+static void
+__bluetooth_player_del_timeout_timer(struct bt_popup_appdata *ad)
+{
+	FN_START;
+	if (ad->playing_timer) {
+		ecore_timer_del(ad->playing_timer);
+		ad->playing_timer = NULL;
+	}
+	FN_END;
+}
+
+static void
+__bluetooth_player_completed_cb(void *user_data)
+{
+	retm_if(user_data == NULL, "invalid parameter");
+	struct bt_popup_appdata *ad = user_data;
+
+	BT_DBG("Media player completed");
+
+	__bluetooth_player_del_timeout_timer(ad);
+	__bluetooth_player_free(ad->player);
+}
+
+static void
+__bluetooth_player_interrupted_cb(player_interrupted_code_e code, void *user_data)
+{
+	retm_if(user_data == NULL, "invalid parameter");
+	struct bt_popup_appdata *ad = user_data;
+
+	BT_ERR("interrupt code [%d]", (int)code);
+
+	__bluetooth_player_del_timeout_timer(ad);
+	__bluetooth_player_free(ad->player);
+}
+
+static void
+__bluetooth_player_error_cb(int error_code, void *user_data)
+{
+	retm_if(user_data == NULL, "invalid parameter");
+	struct bt_popup_appdata *ad = user_data;
+
+	BT_ERR("Error code [%d]", (int)error_code);
+
+	__bluetooth_player_del_timeout_timer(ad);
+	__bluetooth_player_free(ad->player);
+}
+
+static Eina_Bool __bluetooth_player_timeout_cb(void *data)
+{
+	retvm_if(data == NULL, ECORE_CALLBACK_CANCEL, "invalid parameter");
+	struct bt_popup_appdata *ad = data;
+
+	__bluetooth_player_free(ad->player);
+	ad->playing_timer = NULL;
+
+	return ECORE_CALLBACK_CANCEL;
+}
+
+static void __bluetooth_player_start_job_cb(void *data)
+{
+	FN_START;
+	int ret = PLAYER_ERROR_NONE;
+	ret_if(!data);
+	struct bt_popup_appdata *ad = data;
+	ret_if(!ad);
+
+	ret = player_start(ad->player);
+	if (ret != PLAYER_ERROR_NONE) {
+		BT_ERR("player_start [%d]", ret);
+		__bluetooth_player_free(ad->player);
+		return;
+	}
+	ad->playing_timer = ecore_timer_add(15,
+			__bluetooth_player_timeout_cb, ad);
+	FN_END;
+}
+
+static int __bluetooth_notify_event(struct bt_popup_appdata *ad)
+{
+	FN_START;
+	retvm_if(!ad, PLAYER_ERROR_INVALID_PARAMETER, "invalid parameter");
 	int result;
 	char *path = NULL;
+	sound_session_type_e type = 1;
+	player_state_e state = PLAYER_STATE_NONE;
+
+	int ret = PLAYER_ERROR_NONE;
+	int sndRet = SOUND_MANAGER_ERROR_NONE;
 
 	BT_DBG("Notify event");
 
-	result = feedback_initialize();
-	if (result != FEEDBACK_ERROR_NONE) {
-		BT_ERR("feedback_initialize error : %d", result);
-		return;
+	__bluetooth_player_del_timeout_timer(ad);
+
+	if (ad->player != NULL)
+		__bluetooth_player_free(ad->player);
+
+	sound_manager_get_session_type(&type);
+	if (type != SOUND_SESSION_TYPE_NOTIFICATION) {
+		sndRet = sound_manager_set_session_type(SOUND_SESSION_TYPE_NOTIFICATION);
+		if(sndRet != SOUND_MANAGER_ERROR_NONE) {
+			BT_ERR("sound_manager_set_session_type fail");
+			return PLAYER_ERROR_INVALID_PARAMETER;
+		}
+	}
+
+	ret = player_create(&ad->player);
+	if (ret != PLAYER_ERROR_NONE) {
+		BT_ERR("creating the player handle failed[%d]", ret);
+		ad->player= NULL;
+		return ret;
+	}
+
+	ret = player_set_sound_type(ad->player, SOUND_TYPE_NOTIFICATION);
+	if (ret != PLAYER_ERROR_NONE) {
+		BT_ERR("player_set_sound_type() ERR: %x!!!!", ret);
+		__bluetooth_player_free(ad->player);
+		return ret;
+	}
+
+	player_get_state(ad->player, &state);
+	if (state > PLAYER_STATE_READY) {
+		__bluetooth_player_free(ad->player);
+		return ret;
 	}
 
 	/* Set the notification sound from vconf*/
 	path = vconf_get_str(VCONF_NOTI_SOUND);
-	if (path) {
-		BT_DBG("feedback_play Path : %s", path);
-		result = feedback_set_resource_path(FEEDBACK_TYPE_SOUND,
-				FEEDBACK_PATTERN_GENERAL, path);
-		if (result != 0)
-			BT_ERR("feedback_set_resource_path Failed : %d", result);
-		free(path);
+	if (path)
+	{
+		ret = player_set_uri(ad->player, path);
+		if (ret != 0)
+			BT_ERR("player_set_uri Failed : %d", ret);
+
 	} else {
 		BT_ERR("vconf_get_str failed");
+		__bluetooth_player_free(ad->player);
+		return ret;
 	}
 
-	result = feedback_play(FEEDBACK_PATTERN_GENERAL);
-	if (result != FEEDBACK_ERROR_NONE)
-		BT_ERR("feedback_play Error : %d", result);
-
-	result = feedback_deinitialize();
-	if (result != FEEDBACK_ERROR_NONE) {
-		BT_ERR("feedback_deinitialize error : %d", result);
-		return;
+	ret = player_prepare(ad->player);
+	if (ret != PLAYER_ERROR_NONE) {
+		BT_ERR("realizing the player handle failed[%d]", ret);
+		__bluetooth_player_free(ad->player);
+		return ret;
 	}
+
+	player_get_state(ad->player, &state);
+	if (state != PLAYER_STATE_READY) {
+		BT_ERR("state of player is invalid %d", state);
+		__bluetooth_player_free(ad->player);
+		return ret;
+	}
+
+	/* register callback */
+	ret = player_set_completed_cb(ad->player, __bluetooth_player_completed_cb, ad);
+	if (ret != PLAYER_ERROR_NONE) {
+		BT_ERR("player_set_completed_cb() ERR: %x!!!!", ret);
+		__bluetooth_player_free(ad->player);
+		return ret;
+	}
+
+	ret = player_set_interrupted_cb(ad->player, __bluetooth_player_interrupted_cb, ad);
+	if (ret != PLAYER_ERROR_NONE) {
+		__bluetooth_player_free(ad->player);
+		return ret;
+	}
+
+	ret = player_set_error_cb(ad->player, __bluetooth_player_error_cb, ad);
+	if (ret != PLAYER_ERROR_NONE) {
+		__bluetooth_player_free(ad->player);
+		return ret;
+	}
+
+	ecore_job_add(__bluetooth_player_start_job_cb, ad);
+
+	FN_END;
 }
 
 static void __bluetooth_parse_event(struct bt_popup_appdata *ad, const char *event_type)
@@ -233,6 +411,8 @@ static void __bluetooth_parse_event(struct bt_popup_appdata *ad, const char *eve
 		ad->event_type = BT_EVENT_MESSAGE_REQUEST;
 	else if (!strcasecmp(event_type, "pairing-retry-request"))
 		ad->event_type = BT_EVENT_RETRY_PAIR_REQUEST;
+	else if (!strcasecmp(event_type, "music-auto-connect-request"))
+		ad->event_type = BT_EVENT_MUSIC_AUTO_CONNECT_REQUEST;
 	else if (!strcasecmp(event_type, "remote-legacy-pair-failed"))
 		ad->event_type = BT_EVENT_LEGACY_PAIR_FAILED_FROM_REMOTE;
 	else
@@ -378,41 +558,6 @@ static void __bluetooth_remove_all_event(struct bt_popup_appdata *ad)
 	}
 
 	__bluetooth_win_del(ad);
-}
-static void __bluetooth_retry_pairing_cb(void *data,
-				     Evas_Object *obj, void *event_info)
-{
-	BT_DBG("+ ");
-	if (obj == NULL || data == NULL)
-		return;
-
-	struct bt_popup_appdata *ad = (struct bt_popup_appdata *)data;
-	const char *event = elm_object_text_get(obj);
-
-	DBusMessage *msg = NULL;
-	int response;
-
-	msg = dbus_message_new_signal(BT_SYS_POPUP_IPC_RESPONSE_OBJECT,
-				      BT_SYS_POPUP_INTERFACE,
-				      BT_SYS_POPUP_METHOD_RESPONSE);
-
-	if (!g_strcmp0(event, BT_STR_OK))
-		response = BT_AGENT_ACCEPT;
-	 else
-		response = BT_AGENT_REJECT;
-
-	dbus_message_append_args(msg,
-				 DBUS_TYPE_INT32, &response,
-				 DBUS_TYPE_INVALID);
-
-	e_dbus_message_send(ad->EDBusHandle, msg, NULL, -1, NULL);
-
-	dbus_message_unref(msg);
-
-	evas_object_del(obj);
-
-	__bluetooth_win_del(ad);
-	BT_DBG("-");
 }
 
 static int __bluetooth_request_timeout_cb(void *data)
@@ -818,9 +963,7 @@ static void __bluetooth_draw_auth_popup(struct bt_popup_appdata *ad,
 	ad->make_trusted = TRUE;
 
 	ad->popup = elm_popup_add(ad->layout);
-	evas_object_size_hint_weight_set(ad->popup, EVAS_HINT_EXPAND,
-					 	EVAS_HINT_EXPAND);
-
+	elm_popup_align_set(ad->popup, ELM_NOTIFY_ALIGN_FILL, 1.0);
 	elm_object_style_set(ad->popup, "transparent");
 
 	/*set window level to HIGH*/
@@ -935,8 +1078,7 @@ static void __bluetooth_draw_popup(struct bt_popup_appdata *ad,
 	BT_DBG("__bluetooth_draw_popup");
 
 	ad->popup = elm_popup_add(ad->layout);
-	evas_object_size_hint_weight_set(ad->popup, EVAS_HINT_EXPAND,
-					 EVAS_HINT_EXPAND);
+	elm_popup_align_set(ad->popup, ELM_NOTIFY_ALIGN_FILL, 1.0);
 
 	/*set window level to HIGH*/
 	__bluetooth_set_win_level(ad->popup);
@@ -1142,7 +1284,6 @@ static void __bluetooth_entry_edit_mode_show_cb(void *data, Evas *e, Evas_Object
 		void *event_info)
 {
 	FN_START;
-	struct bt_popup_appdata *ad = data;
 	evas_object_event_callback_del(obj, EVAS_CALLBACK_SHOW,
 			__bluetooth_entry_edit_mode_show_cb);
 
@@ -1185,8 +1326,13 @@ static Evas_Object *__bluetooth_passwd_entry_icon_get(
 			.rejected = NULL
 		};
 
-		entry = ea_editfield_add(layout, EA_EDITFIELD_SCROLL_SINGLELINE_PASSWORD);
-		ea_entry_selection_back_event_allow_set(entry, EINA_TRUE);
+		entry = elm_entry_add(layout);
+		elm_entry_single_line_set(entry, EINA_TRUE);
+		elm_entry_scrollable_set(entry, EINA_TRUE);
+		elm_entry_password_set(entry, EINA_TRUE);
+
+		eext_entry_selection_back_event_allow_set(entry, EINA_TRUE);
+
 		evas_object_size_hint_weight_set(entry, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 		evas_object_size_hint_align_set(entry, EVAS_HINT_FILL, EVAS_HINT_FILL);
 		elm_entry_single_line_set(entry, EINA_TRUE);
@@ -1479,8 +1625,7 @@ static void __bluetooth_draw_access_request_popup(struct bt_popup_appdata *ad,
 	ad->make_trusted = FALSE;
 
 	ad->popup = elm_popup_add(ad->layout);
-	evas_object_size_hint_weight_set(ad->popup, EVAS_HINT_EXPAND,
-					EVAS_HINT_EXPAND);
+	elm_popup_align_set(ad->popup, ELM_NOTIFY_ALIGN_FILL, 1.0);
 
 	/*set window level to HIGH*/
 	__bluetooth_set_win_level(ad->popup);
@@ -1564,10 +1709,8 @@ static void __bluetooth_draw_information_popup(struct bt_popup_appdata *ad,
 	Evas_Object *btn1 = NULL;
 
 	ad->popup = elm_popup_add(ad->layout);
-	evas_object_size_hint_weight_set(ad->popup, EVAS_HINT_EXPAND,
-					EVAS_HINT_EXPAND);
 	elm_popup_align_set(ad->popup, ELM_NOTIFY_ALIGN_FILL, 1.0);
-	ea_object_event_callback_add(ad->popup, EA_CALLBACK_BACK, func, ad);
+	eext_object_event_callback_add(ad->popup, EEXT_CALLBACK_BACK, func, ad);
 
 	/*set window level to HIGH*/
 	__bluetooth_set_win_level(ad->popup);
@@ -1609,6 +1752,38 @@ static DBusGProxy* __bluetooth_create_agent_proxy(DBusGConnection *conn,
 	return dbus_g_proxy_new_for_name(conn, "org.projectx.bt", path,
 							"org.bluez.Agent");
 #endif
+}
+
+static void
+__bluetooth_popup_block_clicked_cb(void *data, Evas_Object *obj, void *event_info)
+{
+	FN_START;
+	if(obj)
+		evas_object_del(obj);
+}
+
+static void
+__bluetooth_popup_timeout_cb(void *data, Evas_Object *obj, void *event_info)
+{
+	FN_START;
+	if(obj)
+		evas_object_del(obj);
+}
+
+static void __bluetooth_draw_toast_popup(struct bt_popup_appdata *ad, char *toast_text)
+{
+	FN_START;
+	ad->popup = elm_popup_add(ad->win_main);
+	elm_object_style_set(ad->popup, "toast");
+	evas_object_size_hint_weight_set(ad->popup, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+	eext_object_event_callback_add(ad->popup, EEXT_CALLBACK_BACK, eext_popup_back_cb, NULL);
+	elm_object_part_text_set(ad->popup,"elm.text.content", toast_text);
+	evas_object_smart_callback_add(ad->popup, "block,clicked", __bluetooth_popup_block_clicked_cb, NULL);
+
+	__bluetooth_set_win_level(ad->popup);
+
+	evas_object_show(ad->popup);
+	FN_END;
 }
 
 /* AUL bundle handler */
@@ -1939,6 +2114,8 @@ static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
 		__bluetooth_draw_information_popup(ad, "Bluetooth Error",
 					text, BT_STR_OK,
 					__bluetooth_information_cb);
+	} else if (!strcasecmp(event_type, "music-auto-connect-request")) {
+		__bluetooth_draw_toast_popup(ad, "Connecting...");
 	} else {
 		return -1;
 	}
@@ -2057,21 +2234,32 @@ static void __bluetooth_session_init(struct bt_popup_appdata *ad)
 		BT_ERR("__bt_syspopup_init_app_signal failed");
 }
 
+static void __bluetooth_vconf_change_cb(keynode_t *key, void *data)
+{
+	retm_if(NULL == key, "key is NULL");
+	retm_if(NULL == data, "data is NULL");
+	struct bt_popup_appdata *ad = data;
+
+	char *vconf_name = vconf_keynode_get_name(key);
+
+	if (!g_strcmp0(vconf_name, VCONFKEY_IDLE_LOCK_STATE) &&
+		ad->popup)
+		__bluetooth_set_win_level(ad->popup);
+}
+
 static bool __bluetooth_create(void *data)
 {
 	struct bt_popup_appdata *ad = data;
 	Evas_Object *win = NULL;
 	Evas_Object *conformant = NULL;
 	Evas_Object *layout = NULL;
+	int ret;
 
 	BT_DBG("__bluetooth_create() start.");
 
 	/* create window */
 	win = __bluetooth_create_win(PACKAGE);
 	retv_if (win == NULL, false);
-
-	/* Enable Changeable UI feature */
-	ea_theme_changeable_ui_enabled_set(EINA_TRUE);
 
 	evas_object_smart_callback_add(win, "wm,rotation,changed",
 		__bt_main_win_rot_changed_cb, data);
@@ -2099,6 +2287,10 @@ static bool __bluetooth_create(void *data)
 	ecore_imf_init();
 
 	__bluetooth_session_init(ad);
+	ret = vconf_notify_key_changed(VCONFKEY_IDLE_LOCK_STATE,
+			__bluetooth_vconf_change_cb, ad);
+	if (ret != 0)
+		BT_ERR("vconf_notify_key_changed fail!");
 	if (bt_initialize() != BT_ERROR_NONE) {
 		BT_ERR("bt_initialize is failed");
 	}
@@ -2166,8 +2358,7 @@ static void __bluetooth_reset(app_control_h app_control, void *data)
 	if (event_type != NULL) {
 		if (!strcasecmp(event_type, "terminate")) {
 			__bluetooth_win_del(ad);
-			free(b);
-			return;
+			goto release;
 		}
 
 		if (syspopup_has_popup(b))
@@ -2186,32 +2377,40 @@ static void __bluetooth_reset(app_control_h app_control, void *data)
 			if (ret != 0)
 				__bluetooth_remove_all_event(ad);
 
-			__bluetooth_notify_event();
+			__bluetooth_notify_event(ad);
 
 			/* Change LCD brightness */
-			ret = display_change_state(LCD_NORMAL);
+			ret = device_display_change_state(DISPLAY_STATE_NORMAL);
 			if (ret != 0)
 				BT_ERR("Fail to change LCD");
 		}
 	} else {
 		BT_ERR("event type is NULL ");
 	}
-	free(b);
+release :
+	bundle_free(b);
 }
 
 EXPORT int main(int argc, char *argv[])
 {
-	struct bt_popup_appdata ad;
-	app_event_callback_s event_callback = {
-		.create = __bluetooth_create,
-		.terminate = __bluetooth_terminate,
-		.pause = __bluetooth_pause,
-		.resume = __bluetooth_resume,
-		.app_control = __bluetooth_reset,
-		.device_orientation = NULL,
-	};
+	BT_DBG("Start bt-syspopup main()");
 
-	memset(&ad, 0x0, sizeof(struct bt_popup_appdata));
-	return app_efl_main(&argc, &argv, &event_callback, &ad);
+	ui_app_lifecycle_callback_s callback = {0,};
+
+	struct bt_popup_appdata ad = {0,};
+
+	callback.create = __bluetooth_create;
+	callback.terminate = __bluetooth_terminate;
+	callback.pause = __bluetooth_pause;
+	callback.resume = __bluetooth_resume;
+	callback.app_control = __bluetooth_reset;
+
+	BT_DBG("ui_app_main() is called.");
+	int ret = ui_app_main(argc, argv, &callback, &ad);
+	if (ret != APP_ERROR_NONE) {
+		BT_ERR("ui_app_main() is failed. err = %d", ret);
+	}
+
+	BT_DBG("End bt-syspopup main()");
+	return ret;
 }
-

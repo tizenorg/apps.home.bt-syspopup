@@ -34,9 +34,10 @@
 #include <bluetooth.h>
 #include <feedback.h>
 #include <dd-deviced.h>
-#include <efl_assist.h>
+#include <efl_extension.h>
 #include "bt-syspopup-w.h"
 #include <dbus/dbus-glib-lowlevel.h>
+#include <bundle_internal.h>
 
 #define COLOR_TABLE "/usr/apps/org.tizen.bt-syspopup/shared/res/tables/org.tizen.bt-syspopup_ChangeableColorTable.xml"
 #define FONT_TABLE "/usr/apps/org.tizen.bt-syspopup/shared/res/tables/org.tizen.bt-syspopup_FontInfoTable.xml"
@@ -217,7 +218,7 @@ static void __bluetooth_notify_event(feedback_pattern_e feedback)
 
 static gboolean __bluetooth_pairing_pattern_cb(gpointer data)
 {
-	__bluetooth_notify_event(FEEDBACK_PATTERN_BT_WAITING);
+	__bluetooth_notify_event(FEEDBACK_PATTERN_NONE);
 
 	return TRUE;
 }
@@ -772,8 +773,6 @@ static void __bluetooth_draw_auth_popup(struct bt_popup_appdata *ad,
 	evas_object_size_hint_weight_set(ad->popup, EVAS_HINT_EXPAND,
 					 	EVAS_HINT_EXPAND);
 
-	elm_popup_align_set(ad->popup, ELM_NOTIFY_ALIGN_FILL, 1.0);
-
 	elm_object_style_set(ad->popup, "transparent");
 
 	layout = elm_layout_add(ad->popup);
@@ -867,12 +866,11 @@ static void __bluetooth_draw_reset_popup(struct bt_popup_appdata *ad,
 		BT_ERR("elm_popup_add is failed");
 		return;
 	}
-	elm_popup_align_set(ad->popup, ELM_NOTIFY_ALIGN_FILL, 1.0);
 	evas_object_size_hint_weight_set(ad->popup,
 			EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	elm_object_part_text_set(ad->popup, "title,text", BT_STR_TITLE_CONNECT);
-	ea_object_event_callback_add(ad->popup, EA_CALLBACK_BACK,
-			ea_popup_back_cb, NULL);
+	eext_object_event_callback_add(ad->popup, EEXT_CALLBACK_BACK,
+			eext_popup_back_cb, NULL);
 
 	if (msg != NULL) {
 		txt = elm_entry_utf8_to_markup(msg);
@@ -1013,12 +1011,13 @@ static void __bluetooth_draw_popup(struct bt_popup_appdata *ad,
 		BT_INFO("Title %s", title);
 		label = elm_label_add(scroller_layout);
 		elm_label_line_wrap_set(label, ELM_WRAP_MIXED);
+#if 0
 		ea_theme_color_get("AT012",&r, &g, &b, &a,
 			NULL, NULL, NULL, NULL,
 			NULL, NULL, NULL, NULL);
 		ea_theme_font_get("AT012", &font, &size);
 		BT_INFO("font : %s, size : %d", font, size);
-
+#endif
 		elm_object_part_content_set(scroller_layout, "elm.text.block", label);
 		evas_object_show(label);
 
@@ -1124,10 +1123,12 @@ static void __bluetooth_draw_loading_popup(struct bt_popup_appdata *ad,
 		evas_object_show(label);
 
 		txt = elm_entry_utf8_to_markup(title);
+#if 0
 		ea_theme_color_get("AT012",&r, &g, &b, &a,
 					NULL, NULL, NULL, NULL,
 					NULL, NULL, NULL, NULL);
 		ea_theme_font_get("AT012", &font, &size);
+#endif
 		buf = g_strdup_printf("<font=%s><font_size=%d><color=#%s>%s</color></font_size></font>",
 				font, size,
 				__bluetooth_convert_rgba_to_hex(r, g, b, a),
@@ -1191,9 +1192,8 @@ static void __bluetooth_draw_text_popup(struct bt_popup_appdata *ad,
 	ad->popup = elm_popup_add(ad->win_main);
 	evas_object_size_hint_weight_set(ad->popup, EVAS_HINT_EXPAND,
 					 	EVAS_HINT_EXPAND);
-	elm_popup_align_set(ad->popup, ELM_NOTIFY_ALIGN_FILL, 1.0);
-	ea_object_event_callback_add(ad->popup, EA_CALLBACK_BACK,
-			ea_popup_back_cb, NULL);
+	eext_object_event_callback_add(ad->popup, EEXT_CALLBACK_BACK,
+			eext_popup_back_cb, NULL);
 
 	__bluetooth_set_win_level(ad->popup);
 	txt = elm_entry_utf8_to_markup(text);
@@ -1462,6 +1462,7 @@ static void __bluetooth_draw_input_view(struct bt_popup_appdata *ad,
 	label = elm_label_add(layout);
 	elm_object_style_set(label, "popup/default");
 	elm_label_line_wrap_set(label, ELM_WRAP_CHAR);
+#if 0
 	ea_theme_color_get("AT012",&r, &g, &b, &a,
 				NULL, NULL, NULL, NULL,
 				NULL, NULL, NULL, NULL);
@@ -1469,6 +1470,7 @@ static void __bluetooth_draw_input_view(struct bt_popup_appdata *ad,
 		BT_INFO("font : %s, size : %d", font, size);
 	else
 		BT_INFO("ea_theme_font_get fail!");
+#endif
 	buf = g_strdup_printf("<font=%s><font_size=%d><color=#%s>%s</color></font_size></font>",
 			font, 28,
 			__bluetooth_convert_rgba_to_hex(r, g, b, a),
@@ -1542,6 +1544,7 @@ static DBusGProxy* __bluetooth_create_agent_proxy(DBusGConnection *conn,
 
 }
 
+#if 0
 static int __bt_get_vconf_setup_wizard()
 {
        int wizard_state = VCONFKEY_SETUP_WIZARD_UNLOCK;
@@ -1551,6 +1554,7 @@ static int __bt_get_vconf_setup_wizard()
 
        return wizard_state;
 }
+#endif
 
 /* AUL bundle handler */
 static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
@@ -1861,19 +1865,22 @@ static int __bluetooth_launch_handler(struct bt_popup_appdata *ad,
 		timeout = BT_TOAST_NOTIFICATION_TIMEOUT;
 		__bt_draw_toast_popup(ad, BT_STR_UNABLE_TO_CONNECT);
 	} else if (!strcasecmp(event_type, "handsfree-disconnect-request")) {
+#if 0
 		if (__bt_get_vconf_setup_wizard() == VCONFKEY_SETUP_WIZARD_LOCK) {
 			BT_DBG("VCONFKEY_SETUP_WIZARD_LOCK: No toast shown");
 			return -1;
 		}
-
+#endif
 		timeout = BT_TOAST_NOTIFICATION_TIMEOUT;
 		__bt_draw_toast_popup(ad, BT_STR_BLUETOOTH_HAS_BEEN_DISCONNECTED);
 
 	} else if (!strcasecmp(event_type, "handsfree-connect-request")) {
+#if 0
 		if (__bt_get_vconf_setup_wizard() == VCONFKEY_SETUP_WIZARD_LOCK) {
 			BT_DBG("VCONFKEY_SETUP_WIZARD_LOCK: No toast shown");
 			return -1;
 		}
+#endif
 
 		timeout = BT_TOAST_NOTIFICATION_TIMEOUT;
 		__bt_draw_toast_popup(ad, BT_STR_BLUETOOTH_CONNECTED);
@@ -1935,9 +1942,8 @@ static void __bt_draw_toast_popup(struct bt_popup_appdata *ad, char *toast_text)
 	ad->popup = elm_popup_add(ad->win_main);
 	elm_object_style_set(ad->popup, "toast");
 	elm_popup_orient_set(ad->popup, ELM_POPUP_ORIENT_BOTTOM);
-	elm_popup_align_set(ad->popup, ELM_NOTIFY_ALIGN_FILL, 1.0);
 	evas_object_size_hint_weight_set(ad->popup, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-	ea_object_event_callback_add(ad->popup, EA_CALLBACK_BACK, ea_popup_back_cb, NULL);
+	eext_object_event_callback_add(ad->popup, EEXT_CALLBACK_BACK, eext_popup_back_cb, NULL);
 
 	elm_object_part_text_set(ad->popup,"elm.text", toast_text);
 
@@ -1961,9 +1967,8 @@ static void __bt_draw_error_toast_popup(struct bt_popup_appdata *ad, char *toast
 	ad->popup = elm_popup_add(ad->win_main);
 	elm_object_style_set(ad->popup, "toast");
 	elm_popup_orient_set(ad->popup, ELM_POPUP_ORIENT_BOTTOM);
-	elm_popup_align_set(ad->popup, ELM_NOTIFY_ALIGN_FILL, 1.0);
 	evas_object_size_hint_weight_set(ad->popup, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-	ea_object_event_callback_add(ad->popup, EA_CALLBACK_BACK, ea_popup_back_cb, NULL);
+	eext_object_event_callback_add(ad->popup, EEXT_CALLBACK_BACK, eext_popup_back_cb, NULL);
 	elm_object_part_text_set(ad->popup,"elm.text", toast_text);
 
 	__bluetooth_set_win_level(ad->popup);
@@ -2072,28 +2077,6 @@ static void __bluetooth_session_init(struct bt_popup_appdata *ad)
 		BT_ERR("__bt_syspopup_init_app_signal failed");
 }
 
-void __bluetooth_set_color_table(void *data)
-{
-	FN_START;
-	struct bt_popup_appdata *ad = (struct bt_popup_appdata *)data;
-
-	/* Set color table */
-	ea_theme_changeable_ui_enabled_set(EINA_TRUE);
-	ad->color_table = ea_theme_color_table_new(COLOR_TABLE);
-	if (ad->color_table == NULL)
-		BT_ERR("ea_theme_color_table_new failed!");
-	else if (EINA_TRUE != ea_theme_colors_set(ad->color_table, EA_THEME_STYLE_DEFAULT))
-		BT_ERR("ea_theme_colors_set failed!");
-
-	ad->font_table = ea_theme_font_table_new(FONT_TABLE);
-	if (ad->font_table == NULL)
-		BT_ERR("ea_theme_color_table_new failed!");
-	else if (EINA_TRUE != ea_theme_fonts_set(ad->font_table))
-		BT_ERR("ea_theme_fonts_set failed!");
-
-	FN_END;
-}
-
 static bool __bluetooth_create(void *data)
 {
 	struct bt_popup_appdata *ad = data;
@@ -2120,7 +2103,6 @@ static bool __bluetooth_create(void *data)
 	textdomain(BT_COMMON_PKG);
 
 	ecore_imf_init();
-	__bluetooth_set_color_table(ad);
 
 	__bluetooth_session_init(ad);
 	if (bt_initialize() != BT_ERROR_NONE) {
@@ -2152,34 +2134,6 @@ static int __vzw_launch_modem_syspopup(void)
 	return ret;
 }
 
-static int __na_common_launch_modem_popup(void)
-{
-       int ret;
-       app_control_h app_control = NULL;
-
-       ret = app_control_create(&app_control);
-       if (ret != APP_CONTROL_ERROR_NONE) {
-               BT_ERR("Failed to create appcontrol[%d]", ret);
-               return -1;
-       }
-
-       app_control_add_extra_data(app_control,
-                       "http://samsung.com/appcontrol/data/connection_type",
-                       "grayzone_alert");
-       app_control_set_app_id(app_control, "org.tizen.weconn-popup");
-
-       ret = app_control_send_launch_request(app_control, NULL, NULL);
-       if (ret != APP_CONTROL_ERROR_NONE) {
-               BT_ERR("failed appcontrol launch request [%d]", ret);
-               app_control_destroy(app_control);
-               return -1;
-       }
-
-       app_control_destroy(app_control);
-
-       return 0;
-}
-
 static void __bluetooth_terminate(void *data)
 {
 	BT_DBG("__bluetooth_terminate()");
@@ -2196,16 +2150,6 @@ static void __bluetooth_terminate(void *data)
 		ad->conn = NULL;
 	}
 
-	if (ad->color_table != NULL) {
-		ea_theme_color_table_free(ad->color_table);
-		ad->color_table = NULL;
-	}
-
-	if (ad->font_table != NULL) {
-		ea_theme_font_table_free(ad->font_table);
-		ad->font_table = NULL;
-	}
-
 	if (ad->popup)
 		evas_object_del(ad->popup);
 
@@ -2216,20 +2160,7 @@ static void __bluetooth_terminate(void *data)
 	ad->win_main = NULL;
 
 	if (ad->event_type == BT_EVENT_HANDSFREE_DISCONNECT_REQUEST) {
-		char *salescode = NULL;
-		salescode = vconf_get_str(VCONFKEY_CSC_SALESCODE);
-
-		if (g_strcmp0(salescode, "VZW") == 0) {
-				__vzw_launch_modem_syspopup();
-		} else if (g_strcmp0(salescode, "ATT") == 0 ||
-					g_strcmp0(salescode, "TMB") == 0 ||
-					g_strcmp0(salescode, "SPR") == 0 ||
-					g_strcmp0(salescode, "USC") == 0 ||
-					g_strcmp0(salescode, "XAC") == 0) {
-			__na_common_launch_modem_popup();
-		}
-
-		g_free(salescode);
+		BT_ERR("Not supported in platform");
 	}
 }
 
@@ -2326,12 +2257,12 @@ DONE:
 			BT_ERR("Fail to change LCD");
 
 		if (ad->event_type == BT_EVENT_HANDSFREE_DISCONNECT_REQUEST) {
-			__bluetooth_notify_event(FEEDBACK_PATTERN_DISCONNECTED);
+			__bluetooth_notify_event(FEEDBACK_PATTERN_BT_DISCONNECTED);
 		} else if (ad->event_type == BT_EVENT_HANDSFREE_CONNECT_REQUEST) {
-			__bluetooth_notify_event(FEEDBACK_PATTERN_CONNECTED);
+			__bluetooth_notify_event(FEEDBACK_PATTERN_BT_CONNECTED);
 		} else if (ad->event_type == BT_EVENT_PASSKEY_CONFIRM_REQUEST ||
 			   ad->event_type == BT_EVENT_SYSTEM_RESET_REQUEST) {
-			__bluetooth_notify_event(FEEDBACK_PATTERN_BT_PAIRING);
+			__bluetooth_notify_event(FEEDBACK_PATTERN_NONE);
 			ad->viberation_id = g_timeout_add(BT_VIBERATION_INTERVAL,
 						  __bluetooth_pairing_pattern_cb, NULL);
 			__lock_display();
@@ -2341,7 +2272,7 @@ DONE:
 	return;
 }
 
-static void __bluetooth_lang_changed_cb(void *data)
+static void __bluetooth_lang_changed_cb(app_event_info_h event_info, void *data)
 {
 	BT_DBG("+");
 	ret_if(data == NULL);
@@ -2353,18 +2284,25 @@ EXPORT int main(int argc, char *argv[])
 	struct bt_popup_appdata ad;
 	memset(&ad, 0x0, sizeof(struct bt_popup_appdata));
 
-	app_event_callback_s event_callback;
+	ui_app_lifecycle_callback_s event_callback = {0,};
+	app_event_handler_h handlers[5] = {NULL, };
 
 	event_callback.create = __bluetooth_create;
 	event_callback.terminate = __bluetooth_terminate;
 	event_callback.pause = __bluetooth_pause;
 	event_callback.resume = __bluetooth_resume;
 	event_callback.app_control = __bluetooth_reset;
-	event_callback.low_memory = NULL;
-	event_callback.low_battery = NULL;
-	event_callback.device_orientation = NULL;
-	event_callback.language_changed = __bluetooth_lang_changed_cb;
-	event_callback.region_format_changed = NULL;
 
-	return app_efl_main(&argc, &argv, &event_callback, &ad);
+	ui_app_add_event_handler(&handlers[APP_EVENT_LOW_MEMORY],
+		APP_EVENT_LOW_MEMORY, NULL, NULL);
+	ui_app_add_event_handler(&handlers[APP_EVENT_LOW_BATTERY],
+		APP_EVENT_LOW_BATTERY, NULL, NULL);
+	ui_app_add_event_handler(&handlers[APP_EVENT_DEVICE_ORIENTATION_CHANGED],
+		APP_EVENT_DEVICE_ORIENTATION_CHANGED, NULL, NULL);
+	ui_app_add_event_handler(&handlers[APP_EVENT_LANGUAGE_CHANGED],
+		APP_EVENT_LANGUAGE_CHANGED, __bluetooth_lang_changed_cb, NULL);
+	ui_app_add_event_handler(&handlers[APP_EVENT_REGION_FORMAT_CHANGED],
+		APP_EVENT_REGION_FORMAT_CHANGED, NULL, NULL);
+
+	return ui_app_main(argc, argv, &event_callback, &ad);
 }

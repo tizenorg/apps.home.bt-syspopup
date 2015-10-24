@@ -43,13 +43,15 @@ pkg_check_modules(pkgs REQUIRED
 	capi-network-bluetooth
 	feedback
 	aul
-	efl-assist
+	efl-extension
 	vconf)
 ELSEIF("$ENV{CFLAGS}" MATCHES "-DTIZEN_MOBILE")
 pkg_check_modules(pkgs REQUIRED
 	capi-appfw-application
 	bundle
 	deviced
+	capi-system-device
+	capi-media-player
 	dlog
 	dbus-glib-1
 	ecore
@@ -59,7 +61,7 @@ pkg_check_modules(pkgs REQUIRED
 	edje
 	elementary
 	evas
-	efl-assist
+	efl-extension
 	gobject-2.0
 	syspopup
 	utilX
